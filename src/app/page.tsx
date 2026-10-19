@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mic, Brain, Zap, Shield, TrendingUp, Users, ChevronRight, Star } from "lucide-react";
+import { Mic, Brain, Zap, Shield, TrendingUp, ChevronRight } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -39,7 +39,7 @@ export default function HomePage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-950/60 border border-indigo-700/40 text-indigo-300 text-xs font-semibold mb-8">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Sub-500ms Edge AI Loop • 92% placement accuracy
+            Sub-500ms Edge AI Loop · PrepPilot Engine
           </div>
 
           <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-[1.1] tracking-tight mb-6">
@@ -72,12 +72,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Social Proof */}
-          <div className="mt-12 flex items-center justify-center gap-6 text-xs text-slate-500">
-            <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-slate-400" /> 1,200+ students trained</span>
-            <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> 4.8/5 pilot rating</span>
-            <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-emerald-400" /> WCAG 2.1 AA accessible</span>
-          </div>
+
         </div>
       </section>
 
@@ -125,7 +120,7 @@ export default function HomePage() {
               desc: "Auto-triggers a supportive nudge after 4s of silence, reducing cognitive freeze without burning AI tokens.",
             },
             {
-              icon: <Star className="w-5 h-5" />,
+              icon: <Shield className="w-5 h-5" />,
               color: "rose",
               title: "5-Axis JD Scorecard",
               desc: "Post-interview composite score across Technical, STAR, Clarity, Role Relevance, and Behavioral dimensions.",
