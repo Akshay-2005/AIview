@@ -102,41 +102,41 @@ const DEMO_SCORECARD: JDReadinessScorecard = {
   ],
   confirmedGapWarnings: [
     {
-      gapId: "gap-001",
+      alertId: "a1b2c3d4-0001-4000-8000-000000000001",
       severity: "CRITICAL",
-      skillDomain: "Redis Eviction & TTL Configuration",
-      gapDescription:
-        "Named Redis but could not explain eviction policies or TTL tuning when directly probed.",
+      headline: "Redis Eviction & TTL — Cannot explain under probe",
+      diagnosticSentence:
+        "JD requires deep caching knowledge because Accenture backend roles involve high-throughput systems, but candidate named Redis without explaining eviction policy or TTL when directly probed.",
       remediationSteps: [
         "Read Redis docs on LRU vs LFU eviction policies (30 min)",
+        "Record a 2-minute spoken explanation of cache invalidation with TTL example",
         "Implement a mock caching layer with configurable TTL in a toy project",
-        "Record a 2-minute spoken explanation and review for clarity",
       ],
       jdSkillReference: "Backend caching layer knowledge",
       estimatedPrepHours: 4,
     },
     {
-      gapId: "gap-002",
+      alertId: "a1b2c3d4-0002-4000-8000-000000000002",
       severity: "WARNING",
-      skillDomain: "STAR Quantification",
-      gapDescription:
-        "4 out of 5 answers lacked measurable outcomes. Accenture evaluators expect data-backed STAR.",
+      headline: "STAR answers missing quantified Result (4/5 answers)",
+      diagnosticSentence:
+        "JD requires structured communication because Accenture evaluates candidates on clarity, but 4 of 5 answers had no measurable outcome — answers ended at Action without a Result.",
       remediationSteps: [
-        "Rewrite 3 project descriptions using Metric + Impact format",
-        "Practice the formula: Action → Metric → Outcome for every experience bullet",
+        "Rewrite 3 project bullets using Metric + Impact format",
+        "Practice the formula: Action → Metric → Outcome for every experience",
       ],
       jdSkillReference: "Communication & structured thinking",
       estimatedPrepHours: 3,
     },
     {
-      gapId: "gap-003",
+      alertId: "a1b2c3d4-0003-4000-8000-000000000003",
       severity: "ADVISORY",
-      skillDomain: "Filler Word Density",
-      gapDescription:
-        "4.2 fillers/min detected — exceeds the 2/min credibility threshold.",
+      headline: "Filler word density 4.2/min — exceeds 2/min threshold",
+      diagnosticSentence:
+        "JD requires confident spoken communication, but candidate used 'basically', 'actually', and 'like' at 4.2 per minute — exceeding the 2/min credibility threshold.",
       remediationSteps: [
         "5 timed 2-min recordings with target of zero fillers",
-        "Use silence instead of filler — practice deliberate pausing",
+        "Use deliberate silence instead of filler words",
       ],
       jdSkillReference: "Spoken communication clarity",
       estimatedPrepHours: 2,
