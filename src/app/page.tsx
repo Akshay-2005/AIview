@@ -14,14 +14,14 @@ export default function HomePage() {
           <span className="text-[10px] text-indigo-400 font-semibold bg-indigo-950/60 px-2 py-0.5 rounded-full border border-indigo-800/50 ml-1">PrepPilot</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/interview" className="hidden sm:flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition">
-            Demo
+          <Link href="/auth" className="hidden sm:flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition">
+            Sign In
           </Link>
           <Link
-            href="/interview"
+            href="/auth"
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition shadow-lg shadow-indigo-600/30"
           >
-            Start Interview <ChevronRight className="w-3.5 h-3.5" />
+            Get Started <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </nav>
@@ -57,7 +57,7 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/interview"
+              href="/auth"
               id="hero-start-btn"
               className="flex items-center gap-2 px-8 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-base shadow-2xl shadow-indigo-600/40 transition active:scale-95"
             >
@@ -175,11 +175,11 @@ export default function HomePage() {
           <h2 className="text-4xl font-extrabold text-white mb-4">Ready to practice?</h2>
           <p className="text-slate-400 mb-8">Jump into a live mock interview right now. No sign-up needed to try the demo.</p>
           <Link
-            href="/interview"
+            href="/auth"
             id="cta-start-btn"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-base shadow-2xl shadow-indigo-600/40 transition active:scale-95"
           >
-            <Mic className="w-5 h-5" /> Launch Interview Console
+            <Mic className="w-5 h-5" /> Get Started Free
           </Link>
         </div>
       </section>
