@@ -1,0 +1,300 @@
+// AIview (Powered by PrepPilot Engine)
+// Production Database Relational Schema (PostgreSQL via Prisma ORM)
+// Complete Data Layer covering User Lifecycle, Resumes, JDs, Sessions, Answers, Diagnostics & Survey Responses
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ----------------------------------------------------------------------
+// ENUMS
+// ----------------------------------------------------------------------
+
+enum EducationTier {
+  TIER_1
+  TIER_2
+  TIER_3
+  OFF_CAMPUS_AUTONOMOUS
+}
+
+enum RoleTrack {
+  SOFTWARE_IT
+  CORE_ENGINEERING
+  BUSINESS_MANAGEMENT
+  FINANCE_CONSULTING
+  MARKETING_SALES
+  OTHER_PROFESSIONAL
+}
+
+enum InterviewPhase {
+  WARMUP
+  CORE_TECHNICAL
+  ADVERSARIAL_RESUME_TRAP
+  STAR_BEHAVIORAL
+  WRAPUP
+}
+
+enum SessionStatus {
+  INITIALIZED
+  CALIBRATING
+  IN_PROGRESS
+  EVALUATING
+  COMPLETED
+  ABANDONED
+  FAILED
+}
+
+enum ReadinessTier {
+  TIER_1_INTERVIEW_READY
+  TIER_2_PLACEMENT_CONTENDER
+  TIER_3_DEVELOPING_CANDIDATE
+  TIER_4_FOUNDATIONAL_REMEDIATION
+}
+
+enum SubscriptionTier {
+  FREE_DIAGNOSTIC
+  SACHET_COMPANY_PASS_99
+  MONTHLY_CAMPUS_PASS_149
+  PREMIUM_MENTOR_499
+  INSTITUTIONAL_COLLEGE_SPONSORED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// ----------------------------------------------------------------------
+// MODELS
+// ----------------------------------------------------------------------
+
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  phoneNumber   String?         @unique
+  fullName      String
+  avatarUrl     String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  // Relational Links
+  profile           Profile?
+  resumes           Resume[]
+  interviewSessions InterviewSession[]
+  surveyResponses   SurveyResponse[]
+  payments          PaymentRecord[]
+
+  @@index([email])
+  @@index([phoneNumber])
+}
+
+model Profile {
+  id                   String        @id @default(uuid())
+  userId               String        @unique
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collegeName          String
+  educationTier        EducationTier @default(TIER_3)
+  degree               String        // e.g., B.Tech CSE, BBA, B.Com
+  graduationYear       Int           // e.g., 2026
+  targetIndustry       RoleTrack     @default(SOFTWARE_IT)
+  targetCompanies      String[]      // e.g., ["TCS", "Accenture", "Cognizant"]
+  spokenComfortRating  Int           @default(3) // 1 (Very Hesitant) to 5 (Fluent)
+  vernacularLanguage   String?       // Primary native tongue (Hindi, Telugu, Tamil, etc.)
+  currentSubscription  SubscriptionTier @default(FREE_DIAGNOSTIC)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@index([educationTier])
+  @@index([targetIndustry])
+}
+
+model Resume {
+  id              String             @id @default(uuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileUrl         String             // S3 / Cloudflare R2 secure storage URL
+  fileName        String
+  rawText         String             @db.Text
+  extractedSkills String[]
+  flaggedBuzzwords Json              // [{ buzzword: "Microservices", reason: "Unsubstantiated" }]
+  atsScore        Float              @default(0.0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  interviewSessions InterviewSession[]
+
+  @@index([userId])
+}
+
+model JobDescription {
+  id              String             @id @default(uuid())
+  companyName     String             // e.g., "TCS", "Deloitte", "Custom"
+  roleTitle       String             // e.g., "Associate Software Engineer"
+  roleTrack       RoleTrack          @default(SOFTWARE_IT)
+  rawJDText       String             @db.Text
+  requiredSkills  String[]
+  experienceYears String             @default("0-1 Years")
+  isPreset        Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  interviewSessions InterviewSession[]
+
+  @@index([companyName])
+  @@index([roleTrack])
+}
+
+model InterviewSession {
+  id                String            @id @default(uuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resumeId          String?
+  resume            Resume?           @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  jobDescriptionId  String?
+  jobDescription    JobDescription?   @relation(fields: [jobDescriptionId], references: [id], onDelete: SetNull)
+
+  sessionStatus     SessionStatus     @default(INITIALIZED)
+  sessionNumber     Int               @default(1) // V1, V2, V3 longitudinal counter
+  totalTurns        Int               @default(0)
+  durationSeconds   Int               @default(0)
+  apiComputeCostInr Float             @default(0.0) // Real-time token cost tracker
+  endToEndLatencyMs Int               @default(480) // Measured average voice latency
+  audioRecordingUrl String?           // Full encrypted session audio replay
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Relational Links
+  questions         Question[]
+  evaluation        Evaluation?
+
+  @@index([userId])
+  @@index([sessionStatus])
+  @@index([createdAt])
+}
+
+model Question {
+  id                  String          @id @default(uuid())
+  sessionId           String
+  interviewSession    InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  orderIndex          Int             // 1, 2, 3, 4, 5
+  phase               InterviewPhase  @default(WARMUP)
+  questionText        String          @db.Text
+  targetCompetency    String          // e.g., "Cache Invalidation Trade-offs"
+  expectedBenchmark   String          @db.Text
+  difficultyRating    String          @default("Medium") // Easy, Medium, Hard
+  isFollowUp          Boolean         @default(false)
+  parentQuestionId    String?         // Self-relation for dynamic drill-downs
+
+  createdAt           DateTime        @default(now())
+
+  // Relational Links
+  answers             Answer[]
+
+  @@index([sessionId])
+}
+
+model Answer {
+  id                  String          @id @default(uuid())
+  questionId          String
+  question            Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  audioSnippetUrl     String?         // Segment audio storage
+  transcriptText      String          @db.Text
+  durationSeconds     Float           @default(0.0)
+  wordsPerMinute      Float           @default(0.0)
+  fillerWordCount     Int             @default(0)
+  fillerWordsFound    String[]        // ["basically", "like", "actually"]
+  silentPausesCount   Int             @default(0)
+  longestPauseSeconds Float           @default(0.0)
+  wasInterrupted      Boolean         @default(false)
+
+  createdAt           DateTime        @default(now())
+
+  @@index([questionId])
+}
+
+model Evaluation {
+  id                  String          @id @default(uuid())
+  sessionId           String          @unique
+  interviewSession    InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  // Explainable Performance Composite Score (0.0 to 100.0)
+  compositeScore      Float           // Weighted sum of 5 dimensions
+  readinessTier       ReadinessTier   @default(TIER_3_DEVELOPING_CANDIDATE)
+
+  // 5 Orthogonal Dimensions (0.0 - 100.0)
+  technicalScore      Float           // 30% Weight
+  starStructureScore  Float           // 25% Weight
+  spokenClarityScore  Float           // 20% Weight
+  roleRelevanceScore  Float           // 15% Weight
+  behavioralScore     Float           // 10% Weight
+
+  // Diagnostic Breakdown
+  identifiedGaps      Json            // [{ rootCause: "STAR Result Omission", quote: "...", fix: "..." }]
+  sevenDaySchedule    Json            // Dynamic 7-Day Micro-Prep Plan
+  evaluatorFeedback   String          @db.Text
+
+  createdAt           DateTime        @default(now())
+
+  skillScores         SkillScore[]
+
+  @@index([compositeScore])
+  @@index([readinessTier])
+}
+
+model SkillScore {
+  id                  String          @id @default(uuid())
+  evaluationId        String
+  evaluation          Evaluation      @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  skillName           String          // e.g., "SQL Indexing", "STAR Articulation", "Metronome Cadence"
+  score               Float           // 0.0 - 100.0
+  benchmarkScore      Float           // Target role standard (e.g. 80.0)
+  deltaFromBenchmark  Float
+
+  @@index([evaluationId])
+  @@index([skillName])
+}
+
+model SurveyResponse {
+  id                  String          @id @default(uuid())
+  userId              String?
+  user                User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  statusDescription   String          // Final Year Student, Recent Grad, etc.
+  targetRoleTrack     String          // Software / IT, Core Engineering, etc.
+  interviewsAttended  String          // None, 1–2, 3–5, 6–10, More than 10
+  resourcesUsed       String[]        // YouTube, ChatGPT, Mock platforms
+  practiceFrequency   String          // Sometimes, Often, Rarely, Never
+  primaryChallenge    String          // Explaining answers clearly, What questions to prepare
+  satisfactionRating  Int             // 1 to 5
+  aiAdoptionIntent    Int             // 1 to 5
+  willingnessToPay    String          // Free only, One-time payment, ₹100–₹199, etc.
+  singleTopFeature    String          // AI-powered mock interviews, Technical practice, etc.
+
+  submittedAt         DateTime        @default(now())
+
+  @@index([primaryChallenge])
+  @@index([willingnessToPay])
+}
+
+model PaymentRecord {
+  id                  String          @id @default(uuid())
+  userId              String
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountInr           Float           // e.g., 99.00, 149.00, 499.00
+  plan                SubscriptionTier
+  status              PaymentStatus   @default(PENDING)
+  paymentGateway      String          @default("Razorpay")
+  gatewayPaymentId    String?
+  createdAt           DateTime        @default(now())
+
+  @@index([userId])
+  @@index([status])
+}

@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>AIview — PrepPilot Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --bg:        #080808;
+      --surface:   #0f0f0f;
+      --surface-2: #161616;
+      --border:    #1f1f1f;
+      --border-2:  #2a2a2a;
+      --text:      #f5f5f5;
+      --muted:     #666;
+      --dim:       #3a3a3a;
+      --blue:      #4F8EF7;
+      --blue-dim:  rgba(79,142,247,0.12);
+      --blue-mid:  rgba(79,142,247,0.25);
+      --green:     #3ecf8e;
+      --red:       #f06060;
+      --amber:     #f0a060;
+      --r:         10px;
+      --r-lg:      16px;
+      --shadow:    0 4px 24px rgba(0,0,0,0.4);
+    }
+    [data-theme="light"] {
+      --bg:        #f0f2f5;
+      --surface:   #ffffff;
+      --surface-2: #f5f7fa;
+      --border:    #e2e6ec;
+      --border-2:  #d0d7e2;
+      --text:      #0f1117;
+      --muted:     #7a859a;
+      --dim:       #c0c8d4;
+      --blue:      #2d6ef0;
+      --blue-dim:  rgba(45,110,240,0.09);
+      --blue-mid:  rgba(45,110,240,0.2);
+      --green:     #17a96d;
+      --red:       #e03e3e;
+      --amber:     #d97706;
+      --shadow:    0 4px 24px rgba(15,17,23,0.08);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html{transition:background 0.25s,color 0.25s;}
+    body,
+    .sidebar,.card,.modal-box,.tele-card,.gap-item,.q-bubble,.answer-box,.mock-tele-card,.dropzone,.cpill,.nav-item,.data-table td,.data-table th{transition:background 0.25s,border-color 0.25s,color 0.25s,box-shadow 0.25s;}
+    body{font-family:'Geist',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow-x:hidden;}
+    .sidebar{width:220px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0;position:fixed;top:0;left:0;bottom:0;z-index:100;}
+    .sidebar-logo{padding:0 20px 28px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+    .wordmark{font-size:18px;font-weight:900;letter-spacing:-0.5px;color:var(--text);}
+    .wordmark span{color:var(--blue);}
+    .tagline{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:0.8px;text-transform:uppercase;}
+    .nav-section{padding:0 12px;flex:1;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r);cursor:pointer;transition:all 0.15s;color:var(--muted);font-size:13px;font-weight:500;margin-bottom:2px;border:1px solid transparent;background:none;width:100%;text-align:left;font-family:inherit;}
+    .nav-item:hover{color:var(--text);background:var(--surface-2);}
+    .nav-item.active{color:var(--blue);background:var(--blue-dim);border-color:rgba(79,142,247,0.2);}
+    .nav-icon{font-size:15px;width:18px;text-align:center;}
+    .sidebar-footer{padding:16px 20px 0;border-top:1px solid var(--border);margin-top:auto;}
+    .pilot-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);padding:5px 10px;border-radius:20px;}
+    /* ── THEME TOGGLE ── */
+    .theme-toggle-wrap{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;user-select:none;transition:border-color 0.15s;}
+    .theme-toggle-wrap:hover{border-color:var(--blue);}
+    .theme-toggle-label{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:var(--muted);}
+    .theme-toggle-icon{font-size:14px;}
+    .theme-switch{position:relative;width:36px;height:20px;flex-shrink:0;}
+    .theme-switch input{opacity:0;width:0;height:0;position:absolute;}
+    .theme-track{position:absolute;inset:0;background:var(--border-2);border-radius:20px;transition:background 0.25s;}
+    .theme-switch input:checked+.theme-track{background:var(--blue);}
+    .theme-knob{position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform 0.25s;box-shadow:0 1px 4px rgba(0,0,0,0.25);}
+    .theme-switch input:checked~.theme-track .theme-knob{transform:translateX(16px);}
+    .pilot-dot{width:5px;height:5px;background:var(--green);border-radius:50%;}
+    .main{margin-left:220px;flex:1;padding:40px 48px;min-height:100vh;}
+    .view{display:none;}
+    .view.active{display:block;}
+    .page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;}
+    .page-title{font-size:26px;font-weight:800;letter-spacing:-0.5px;}
+    .page-subtitle{font-size:13px;color:var(--muted);margin-top:4px;}
+    .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;border:none;font-family:inherit;}
+    .btn-primary{background:var(--blue);color:#fff;}
+    .btn-primary:hover{background:#6ba3ff;}
+    .btn-ghost{background:var(--surface-2);border:1px solid var(--border-2);color:var(--text);}
+    .btn-ghost:hover{border-color:var(--blue);color:var(--blue);}
+    .btn-danger{background:rgba(240,96,96,0.12);border:1px solid rgba(240,96,96,0.3);color:var(--red);}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;}
+    .card-sm{padding:18px;}
+    .card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;}
+    .kpi-num{font-size:52px;font-weight:900;letter-spacing:-2px;line-height:1;color:var(--text);font-variant-numeric:tabular-nums;}
+    .kpi-num.blue{color:var(--blue);}
+    .kpi-num.green{color:var(--green);}
+    .kpi-num.sm{font-size:36px;letter-spacing:-1px;}
+    .kpi-label{font-size:12px;color:var(--muted);margin-top:6px;}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+    .prog-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+    .prog-label{font-size:12px;color:var(--muted);width:160px;flex-shrink:0;}
+    .prog-track{flex:1;height:4px;background:var(--surface-2);border-radius:2px;}
+    .prog-fill{height:100%;border-radius:2px;background:var(--blue);transition:width 0.8s ease;}
+    .prog-val{font-size:12px;font-weight:700;color:var(--text);width:34px;text-align:right;font-family:'Geist Mono',monospace;}
+    .score-ring-wrap{display:flex;align-items:center;gap:32px;margin-bottom:24px;}
+    .score-ring{position:relative;width:110px;height:110px;flex-shrink:0;}
+    .score-ring svg{transform:rotate(-90deg);}
+    .score-ring .ring-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .ring-big{font-size:30px;font-weight:900;color:var(--text);letter-spacing:-1px;}
+    .ring-small{font-size:10px;color:var(--muted);}
+    .tag{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:0.4px;}
+    .tag-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(79,142,247,0.25);}
+    .tag-green{background:rgba(62,207,142,0.1);color:var(--green);border:1px solid rgba(62,207,142,0.25);}
+    .tag-red{background:rgba(240,96,96,0.1);color:var(--red);border:1px solid rgba(240,96,96,0.25);}
+    .tag-amber{background:rgba(240,160,96,0.1);color:var(--amber);border:1px solid rgba(240,160,96,0.25);}
+    .tag-dim{background:var(--surface-2);color:var(--muted);border:1px solid var(--border-2);}
+    .divider{height:1px;background:var(--border);margin:20px 0;}
+    .company-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;}
+    .cpill{padding:7px 16px;border-radius:8px;border:1px solid var(--border-2);background:var(--surface-2);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.15s;font-family:inherit;}
+    .cpill:hover{border-color:var(--blue);color:var(--text);}
+    .cpill.active{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);}
+    .gap-item{padding:16px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface-2);margin-bottom:10px;}
+    .gap-item.critical{border-left:3px solid var(--red);}
+    .gap-item.warning{border-left:3px solid var(--amber);}
+    .gap-item.ok{border-left:3px solid var(--green);}
+    .q-row{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);}
+    .q-row:last-child{border-bottom:none;}
+    .q-num{font-size:11px;color:var(--dim);font-family:'Geist Mono',monospace;width:24px;flex-shrink:0;margin-top:2px;}
+    .tele-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    .tele-card{padding:16px;background:var(--surface-2);border-radius:var(--r);border:1px solid var(--border);}
+    .tele-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;}
+    .tele-val{font-size:22px;font-weight:800;color:var(--text);font-family:'Geist Mono',monospace;letter-spacing:-0.5px;}
+    .tele-sub{font-size:10px;color:var(--muted);margin-top:4px;}
+    .day-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);}
+    .day-row:last-child{border-bottom:none;}
+    .day-num{font-size:10px;font-weight:800;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(79,142,247,0.2);padding:3px 8px;border-radius:6px;width:42px;text-align:center;flex-shrink:0;}
+    .day-content{flex:1;}
+    .day-title{font-size:13px;font-weight:600;color:var(--text);}
+    .day-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+    .day-time{font-size:11px;font-family:'Geist Mono',monospace;color:var(--muted);}
+    .data-table{width:100%;border-collapse:collapse;font-size:12px;}
+    .data-table th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:700;}
+    .data-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);}
+    .data-table tr:last-child td{border-bottom:none;}
+    .data-table tr:hover td{background:var(--surface-2);}
+    .table-wrap{max-height:360px;overflow-y:auto;}
+    .upload-mode-toggle{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:3px;gap:2px;margin-bottom:16px;}
+    .mode-btn{padding:6px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:inherit;transition:all 0.15s;}
+    .mode-btn.active{background:var(--surface);color:var(--text);border:1px solid var(--border-2);}
+    .dropzone{border:1px dashed var(--border-2);border-radius:var(--r-lg);padding:40px;text-align:center;cursor:pointer;transition:all 0.2s;}
+    .dropzone:hover,.dropzone.drag{border-color:var(--blue);background:var(--blue-dim);}
+    .dropzone-icon{font-size:28px;margin-bottom:10px;}
+    .dropzone-text{font-size:13px;color:var(--muted);}
+    .dropzone-text strong{color:var(--blue);}
+    .jd-textarea,.resume-textarea{width:100%;min-height:120px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--r);color:var(--text);font-size:12.5px;font-family:'Geist Mono',monospace;line-height:1.7;padding:14px;outline:none;resize:vertical;transition:border-color 0.15s;}
+    .jd-textarea:focus,.resume-textarea:focus{border-color:var(--blue);}
+    .api-row{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap;}
+    .api-input{flex:1;min-width:200px;padding:9px 14px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--r);color:var(--text);font-size:12px;font-family:'Geist Mono',monospace;outline:none;}
+    .api-input:focus{border-color:var(--blue);}
+    .skill-chips{display:flex;flex-wrap:wrap;gap:7px;}
+    .skill-chip{font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;font-family:'Geist Mono',monospace;}
+    .modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;}
+    .modal-overlay.open{display:flex;}
+    .modal-box{width:100%;max-width:820px;background:var(--surface);border:1px solid var(--border-2);border-radius:20px;max-height:92vh;overflow-y:auto;}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;padding:22px 28px;border-bottom:1px solid var(--border);}
+    .modal-title{font-size:16px;font-weight:800;color:var(--text);}
+    .modal-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+    .modal-body{padding:28px;}
+    .q-bubble{background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--r-lg);padding:20px 24px;margin-bottom:20px;}
+    .interviewer-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .avatar{width:32px;height:32px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0;}
+    .interviewer-name{font-size:13px;font-weight:700;}
+    .live-badge{margin-left:auto;font-size:10px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:5px;}
+    .live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.2s ease-in-out infinite;}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+    .q-text{font-size:15px;font-weight:500;line-height:1.65;color:var(--text);}
+    .answer-box{background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--r-lg);padding:16px;margin-bottom:16px;}
+    .answer-box-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:11px;color:var(--muted);}
+    .voice-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(62,207,142,0.3);background:rgba(62,207,142,0.08);color:var(--green);font-family:inherit;transition:all 0.15s;}
+    .voice-btn.recording{border-color:rgba(240,96,96,0.4);background:rgba(240,96,96,0.08);color:var(--red);}
+    .mock-textarea{width:100%;min-height:100px;background:transparent;border:none;outline:none;color:var(--text);font-size:13.5px;line-height:1.65;font-family:inherit;resize:vertical;}
+    .inject-row{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap;}
+    .inject-btn{font-size:11px;padding:5px 12px;border-radius:7px;cursor:pointer;font-family:inherit;font-weight:600;transition:all 0.15s;}
+    .mock-tele{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+    .mock-tele-card{padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);}
+    .mt-label{font-size:9px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:6px;}
+    .mt-val{font-size:20px;font-weight:800;font-family:'Geist Mono',monospace;}
+    .followup-box{display:none;background:rgba(240,96,96,0.06);border:1px solid rgba(240,96,96,0.2);border-radius:var(--r);padding:16px 18px;margin-bottom:16px;}
+    .followup-label{font-size:10px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;}
+    .followup-text{font-size:13.5px;color:#fca5a5;line-height:1.6;}
+    .scaffold-alert{display:none;align-items:flex-start;gap:10px;padding:12px 16px;background:rgba(240,160,96,0.06);border:1px solid rgba(240,160,96,0.2);border-radius:var(--r);margin-bottom:14px;font-size:12.5px;color:var(--amber);}
+    .scorecard{display:none;padding:28px;}
+    .score-hero{text-align:center;margin-bottom:32px;}
+    .score-hero .big-num{font-size:80px;font-weight:900;letter-spacing:-4px;color:var(--text);line-height:1;}
+    .score-hero .score-label{font-size:13px;color:var(--muted);margin-top:6px;}
+    .report-dim-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:12.5px;}
+    .report-bar-wrap{width:120px;height:4px;background:var(--surface-2);border-radius:2px;}
+    .report-bar{height:100%;border-radius:2px;background:var(--blue);}
+    ::-webkit-scrollbar{width:4px;height:4px;}
+    ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:4px;}
+    @keyframes pulse-dot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(0.7);opacity:0.4}}
+    .v-dot{width:7px;height:7px;background:var(--red);border-radius:50%;animation:pulse-dot 1s infinite;display:none;}
+    /* ── RESUME OPTIMIZER ── */
+    .skill-match-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+    .skill-match-row:last-child{border-bottom:none;}
+    .skill-status{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .resume-upload-zone{border:2px dashed var(--border-2);border-radius:var(--r-lg);padding:32px;text-align:center;cursor:pointer;transition:all 0.2s;}
+    .resume-upload-zone:hover{border-color:var(--blue);background:var(--blue-dim);}
+    .improve-bullet{padding:10px 14px;border-radius:var(--r);background:var(--surface-2);border:1px solid var(--border);margin-bottom:8px;font-size:12px;line-height:1.7;color:var(--text);}
+    .improve-bullet strong{color:var(--blue);}
+    /* ── CHATBOT ── */
+    .chat-fab{position:fixed;bottom:28px;right:28px;z-index:9000;width:56px;height:56px;background:var(--blue);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 20px rgba(79,142,247,0.5);transition:all 0.2s;}
+    .chat-fab:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(79,142,247,0.6);}
+    .chat-panel{position:fixed;bottom:96px;right:28px;z-index:8999;width:360px;height:520px;background:var(--surface);border:1px solid var(--border-2);border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,0.3);display:flex;flex-direction:column;transform:scale(0.9) translateY(20px);opacity:0;pointer-events:none;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);}
+    .chat-panel.open{transform:scale(1) translateY(0);opacity:1;pointer-events:all;}
+    .chat-head{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+    .chat-avatar{width:36px;height:36px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+    .chat-name{font-size:13px;font-weight:800;color:var(--text);}
+    .chat-status{font-size:10px;color:var(--green);margin-top:1px;}
+    .chat-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+    .chat-msg{max-width:85%;padding:10px 13px;border-radius:14px;font-size:12.5px;line-height:1.6;}
+    .chat-msg.bot{background:var(--surface-2);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-bottom-left-radius:4px;}
+    .chat-msg.user{background:var(--blue);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+    .chat-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px;flex-shrink:0;}
+    .chat-chip{font-size:11px;padding:5px 11px;border-radius:20px;border:1px solid var(--border-2);background:var(--surface-2);color:var(--muted);cursor:pointer;transition:all 0.15s;font-family:inherit;font-weight:600;}
+    .chat-chip:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);}
+    .chat-input-row{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0;}
+    .chat-input{flex:1;padding:8px 12px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:20px;color:var(--text);font-size:12px;outline:none;font-family:inherit;}
+    .chat-input:focus{border-color:var(--blue);}
+    .chat-send{width:34px;height:34px;background:var(--blue);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:background 0.15s;}
+    .chat-send:hover{background:#6ba3ff;}
+    .chat-voice-btn{width:34px;height:34px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.15s;}
+    .chat-voice-btn.active{background:rgba(240,96,96,0.15);border-color:var(--red);}
+    /* ── ROUND SELECTOR ── */
+    .round-selector{padding:28px;}
+    .round-card{padding:20px;border-radius:var(--r-lg);border:2px solid var(--border-2);cursor:pointer;transition:all 0.2s;margin-bottom:12px;display:flex;align-items:center;gap:16px;}
+    .round-card:hover{border-color:var(--blue);background:var(--blue-dim);}
+    .round-card.selected{border-color:var(--blue);background:var(--blue-dim);}
+    .round-icon{font-size:28px;flex-shrink:0;}
+    .round-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px;}
+    .round-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+    /* ── TOAST ── */
+    .toast{position:fixed;top:20px;right:20px;z-index:99999;padding:12px 18px;border-radius:var(--r);font-size:12.5px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all 0.3s;opacity:0;transform:translateY(-10px);pointer-events:none;max-width:320px;}
+    .toast.show{opacity:1;transform:translateY(0);}
+    .toast.error{background:rgba(240,96,96,0.15);border:1px solid rgba(240,96,96,0.3);color:var(--red);}
+    .toast.success{background:rgba(62,207,142,0.15);border:1px solid rgba(62,207,142,0.3);color:var(--green);}
+    .toast.info{background:var(--blue-dim);border:1px solid rgba(79,142,247,0.3);color:var(--blue);}
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="wordmark">AI<span>view</span></div>
+    <div class="tagline">PrepPilot Engine</div>
+  </div>
+  <nav class="nav-section">
+    <button class="nav-item active" id="nav-student" onclick="switchView('student')">
+      <span class="nav-icon">◎</span> My Progress
+    </button>
+    <button class="nav-item" id="nav-jd" onclick="switchView('jd')">
+      <span class="nav-icon">⊡</span> JD Simulator
+    </button>
+    <button class="nav-item" id="nav-resume" onclick="switchView('resume')">
+      <span class="nav-icon">📄</span> Resume Optimizer
+    </button>
+    <button class="nav-item" id="nav-admin" onclick="switchView('admin')">
+      <span class="nav-icon">⋮⋮</span> Analytics
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="pilot-badge"><div class="pilot-dot"></div> n=30 validated</div>
+    <div style="font-size:10px;color:var(--dim);margin-top:10px;">Azisly Impact Sprint '25</div>
+    <label class="theme-toggle-wrap" for="theme-checkbox" title="Toggle Light / Dark mode" id="theme-toggle-btn">
+      <div class="theme-toggle-label">
+        <span class="theme-toggle-icon" id="theme-icon">🌙</span>
+        <span id="theme-label">Dark Mode</span>
+      </div>
+      <div class="theme-switch">
+        <input type="checkbox" id="theme-checkbox" onchange="toggleTheme(this.checked)">
+        <div class="theme-track"><div class="theme-knob"></div></div>
+      </div>
+    </label>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- ── VIEW: STUDENT PROGRESS ──────────────────────────────── -->
+  <div id="view-student" class="view active">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Rahul Sharma</div>
+        <div class="page-subtitle">Final Year B.Tech CSE &nbsp;·&nbsp; TCS Digital / Accenture ASE &nbsp;·&nbsp; 4 sessions completed</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" onclick="openReadinessReport()">↗ Export Report</button>
+        <button class="btn btn-primary" onclick="openMockSession()">▶ Start Mock</button>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="card-title">Explainable Performance Score</div>
+        <div class="score-ring-wrap">
+          <div class="score-ring">
+            <svg width="110" height="110" viewBox="0 0 110 110">
+              <circle cx="55" cy="55" r="48" fill="none" stroke="#1f1f1f" stroke-width="8"/>
+              <circle cx="55" cy="55" r="48" fill="none" stroke="#4F8EF7" stroke-width="8"
+                stroke-dasharray="301.6" stroke-dashoffset="48.3" stroke-linecap="round"/>
+            </svg>
+            <div class="ring-num"><div class="ring-big">84</div><div class="ring-small">/ 100</div></div>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+              <span class="tag tag-green">🟢 Tier 1 — Ready</span>
+              <span class="tag tag-blue">+36 pts vs V1</span>
+            </div>
+            <div class="prog-row"><div class="prog-label">Technical Depth (30%)</div><div class="prog-track"><div class="prog-fill" style="width:88%"></div></div><div class="prog-val">88</div></div>
+            <div class="prog-row"><div class="prog-label">STAR Structure (25%)</div><div class="prog-track"><div class="prog-fill" style="width:82%;background:var(--green)"></div></div><div class="prog-val">82</div></div>
+            <div class="prog-row"><div class="prog-label">Spoken Clarity (20%)</div><div class="prog-track"><div class="prog-fill" style="width:81%;background:#9b8ef7"></div></div><div class="prog-val">81</div></div>
+            <div class="prog-row"><div class="prog-label">Role Relevance (15%)</div><div class="prog-track"><div class="prog-fill" style="width:86%;background:var(--amber)"></div></div><div class="prog-val">86</div></div>
+            <div class="prog-row" style="margin-bottom:0;"><div class="prog-label">Behavioral Conf. (10%)</div><div class="prog-track"><div class="prog-fill" style="width:80%;background:var(--red)"></div></div><div class="prog-val">80</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Competency Footprint vs Benchmark</div>
+        <div style="height:220px;position:relative;"><canvas id="radarCompetencyChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <div class="card-title" style="margin:0;">Progress Trend &nbsp; V1 → V3</div>
+        <span class="tag tag-dim">14-day adaptive practice</span>
+      </div>
+      <div style="height:200px;position:relative;"><canvas id="trendChart"></canvas></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div class="card-title" style="margin:0;">Diagnostic Gap</div>
+          <span class="tag tag-red">High Priority</span>
+        </div>
+        <div class="gap-item critical">
+          <div style="font-size:11px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">⊘ STAR Result Omission</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.7;">You described the fix but gave no latency metric, user count, or % improvement. Screeners penalize answers without numbers by 42%.</div>
+          <div class="divider"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11px;">
+            <div style="background:rgba(240,96,96,0.07);border:1px solid rgba(240,96,96,0.15);border-radius:8px;padding:10px;">
+              <div style="color:var(--red);font-weight:700;margin-bottom:4px;">Your Response</div>
+              <div style="color:#94a3b8;font-style:italic;">"...our professor liked it."</div>
+            </div>
+            <div style="background:rgba(79,142,247,0.07);border:1px solid rgba(79,142,247,0.15);border-radius:8px;padding:10px;">
+              <div style="color:var(--blue);font-weight:700;margin-bottom:4px;">PrepPilot STAR</div>
+              <div style="color:#94a3b8;font-style:italic;">"...latency dropped 78% from 4.2s to 900ms."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div class="card-title" style="margin:0;">7-Day Micro-Prep Plan</div>
+          <span class="tag tag-dim">15 min / day</span>
+        </div>
+        <div class="day-row"><div class="day-num">D 1–2</div><div class="day-content"><div class="day-title">STAR Framework Drills</div><div class="day-desc">Quantify every result with % or ms metric</div></div><span class="tag tag-green">✓</span></div>
+        <div class="day-row"><div class="day-num">D 3</div><div class="day-content"><div class="day-title">Redis Deep Dive</div><div class="day-desc">Write-Through vs Cache-Aside + TTL strategy</div></div><div class="day-time">20m</div></div>
+        <div class="day-row"><div class="day-num">D 4–5</div><div class="day-content"><div class="day-title">Filler Word Elimination</div><div class="day-desc">Target &lt;2 fillers/min — record yourself</div></div><div class="day-time">15m</div></div>
+        <div class="day-row"><div class="day-num">D 6</div><div class="day-content"><div class="day-title">Full Company Simulation</div><div class="day-desc">TCS Digital — 4-question timed mock</div></div><div class="day-time">20m</div></div>
+        <div class="day-row" style="border-bottom:none;"><div class="day-num">D 7</div><div class="day-content"><div class="day-title">Confidence Round</div><div class="day-desc">All 5 dimensions ≥85 — then you're ready</div></div><div class="day-time">15m</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── VIEW: JD SIMULATOR ──────────────────────────────────── -->
+  <div id="view-jd" class="view">
+    <div class="page-header">
+      <div>
+        <div class="page-title">JD Simulator</div>
+        <div class="page-subtitle">Upload your JD → Gemini generates role-specific questions → Live mock interview</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" onclick="runJDMatch()">⚡ Run Match Analysis</button>
+        <button class="btn btn-primary" onclick="launchCompanySim()">▶ Launch Simulation</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="card-title" style="margin:0;">Step 1 — Add Job Description</div>
+      </div>
+
+      <!-- TWO PATHS side by side -->
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;margin-bottom:0;">
+
+        <!-- PATH A: Templates (No API key) -->
+        <div style="background:var(--blue-dim);border:2px solid var(--blue);border-radius:var(--r-lg);padding:18px;">
+          <div style="font-size:11px;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">🚀 Path A — No API Key Needed</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Select a company below → instantly launch a calibrated mock interview. <strong style="color:var(--text);">No setup required.</strong></div>
+          <div class="company-grid" id="company-selector" style="margin-bottom:14px;">
+            <button class="cpill active" data-company="tcs" onclick="selectCompany(this,'tcs')">TCS Digital</button>
+            <button class="cpill" data-company="cognizant" onclick="selectCompany(this,'cognizant')">Cognizant GenC</button>
+            <button class="cpill" data-company="infosys" onclick="selectCompany(this,'infosys')">Infosys SP</button>
+            <button class="cpill" data-company="wipro" onclick="selectCompany(this,'wipro')">Wipro Elite</button>
+            <button class="cpill" data-company="accenture" onclick="selectCompany(this,'accenture')">Accenture ASE</button>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:12px;" id="jd-company-badge">TCS Digital — Associate Software Engineer</div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:14px;padding:13px;" onclick="launchCompanySim()">▶ Launch Interview Now</button>
+        </div>
+
+        <!-- Divider -->
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding-top:60px;">
+          <div style="width:1px;height:40px;background:var(--border);"></div>
+          <div style="font-size:11px;font-weight:800;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:5px 10px;">OR</div>
+          <div style="width:1px;height:40px;background:var(--border);"></div>
+        </div>
+
+        <!-- PATH B: Custom JD + Gemini -->
+        <div style="background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--r-lg);padding:18px;">
+          <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">✨ Path B — Custom JD + Gemini AI</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Upload or paste your JD → Gemini generates role-specific questions. Requires free API key.</div>
+          <div class="upload-mode-toggle" style="margin-bottom:12px;">
+            <button class="mode-btn active" id="jd-mode-paste" onclick="setJDInputMode('paste')">📋 Paste</button>
+            <button class="mode-btn" id="jd-mode-file" onclick="setJDInputMode('file')">📄 Upload PDF</button>
+          </div>
+          <div id="jd-paste-area">
+            <textarea id="jd-custom-text" class="jd-textarea" style="min-height:100px;" placeholder="Paste the complete Job Description here..." oninput="validateCustomJD()"></textarea>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted);">
+              <span id="jd-char-count">0 chars</span>
+              <span id="jd-validation-hint">Min 100 chars required</span>
+            </div>
+          </div>
+          <div id="jd-file-area" style="display:none;">
+            <div class="dropzone" id="jd-dropzone"
+              ondragover="event.preventDefault();this.classList.add('drag');"
+              ondragleave="this.classList.remove('drag');"
+              ondrop="handleJDFileDrop(event)"
+              onclick="document.getElementById('jd-file-input').click()">
+              <div class="dropzone-icon">📄</div>
+              <div class="dropzone-text">Drag &amp; drop PDF or TXT — or <strong>click to browse</strong></div>
+              <div style="font-size:11px;color:var(--dim);margin-top:6px;">Max 5 MB</div>
+            </div>
+            <input type="file" id="jd-file-input" accept=".pdf,.txt" style="display:none;" onchange="handleJDFileSelect(event)">
+            <div id="jd-file-status" style="display:none;font-size:12px;margin-top:8px;padding:8px 12px;background:var(--surface);border-radius:8px;"></div>
+          </div>
+          <div style="margin-top:12px;">
+            <input type="password" id="gemini-api-key" id="gemini-api-key" class="api-input" placeholder="Gemini API Key (AIza...) — free at aistudio.google.com" style="margin-bottom:8px;">
+            <button class="btn btn-ghost" onclick="analyzeJDWithGemini()" id="gemini-analyze-btn" style="width:100%;justify-content:center;">✨ Generate with Gemini</button>
+          </div>
+          <div id="gemini-status" style="display:none;font-size:12px;margin-top:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;"></div>
+          <div style="font-size:10px;color:var(--dim);margin-top:8px;">⚠ Key processed locally — not stored. <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue);">Get free key →</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="card-title">JD Match Score</div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">
+          <div class="kpi-num sm" id="jd-match-pct">—</div>
+          <div style="font-size:14px;color:var(--muted);">/ 100%</div>
+        </div>
+        <div style="height:4px;background:var(--surface-2);border-radius:2px;margin-bottom:12px;">
+          <div id="jd-match-bar" style="height:100%;background:var(--blue);border-radius:2px;width:0%;transition:width 1.2s ease;"></div>
+        </div>
+        <div id="jd-status" style="font-size:12px;color:var(--muted);">Click "Run Match Analysis" to begin →</div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="card-title">Active Job Description</div>
+        <div id="jd-text-display" style="font-size:12px;color:var(--muted);line-height:1.8;max-height:220px;overflow-y:auto;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Resume Skills — Agent 2 Parsed</div>
+        <div id="resume-skills-display" class="skill-chips" style="margin-bottom:12px;"></div>
+        <div style="font-size:10.5px;color:var(--dim);padding-top:10px;border-top:1px solid var(--border);">🟢 Matched &nbsp; 🔴 Unverified &nbsp; ⬜ Missing</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="card-title" style="margin:0;">Gap Detection Report</div>
+        <span class="tag tag-dim" id="gap-badge">Run analysis first</span>
+      </div>
+      <div id="gap-cards"></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="card-title" style="margin:0;">Company-Calibrated Questions</div>
+        <span class="tag tag-blue" id="qbank-badge">TCS Digital</span>
+      </div>
+      <div id="question-bank"></div>
+      <div style="font-size:10.5px;color:var(--dim);padding-top:14px;border-top:1px solid var(--border);margin-top:4px;">Questions calibrated from 2024–2025 campus drives across 200+ Tier-2 colleges.</div>
+    </div>
+  </div>
+
+  <!-- ── VIEW: ANALYTICS ─────────────────────────────────────── -->
+  <div id="view-admin" class="view">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Sprint Analytics</div>
+        <div class="page-subtitle">n=30 pilot validation &nbsp;·&nbsp; Azisly Impact Sprint &nbsp;·&nbsp; Ground truth data</div>
+      </div>
+    </div>
+
+    <div class="grid-4" style="margin-bottom:16px;">
+      <div class="card card-sm"><div class="card-title">Pilot Sample</div><div class="kpi-num sm">30</div><div class="kpi-label">Directional baseline</div></div>
+      <div class="card card-sm"><div class="card-title">AI Adoption Intent</div><div class="kpi-num sm blue">76.7%</div><div class="kpi-label">23/30 likely / very likely</div></div>
+      <div class="card card-sm"><div class="card-title">Prep Satisfaction</div><div class="kpi-num sm" style="color:var(--amber);">2.83</div><div class="kpi-label">/ 5.0 — gap to fill</div></div>
+      <div class="card card-sm"><div class="card-title">Paid Intent</div><div class="kpi-num sm green">60%</div><div class="kpi-label">18/30 open to pay</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Platform Health — Live Telemetry</div>
+      <div class="tele-grid">
+        <div class="tele-card"><div class="tele-label">E2E Latency</div><div class="tele-val" id="telemetry-latency">482ms</div><div class="tele-sub" style="color:var(--green);">SLA &lt;600ms ✓</div></div>
+        <div class="tele-card"><div class="tele-label">Cost / Session</div><div class="tele-val">₹4.18</div><div class="tele-sub" style="color:var(--green);">83.4% margin @ ₹149</div></div>
+        <div class="tele-card"><div class="tele-label">Tokens / Turn</div><div class="tele-val">385</div><div class="tele-sub">Gemini 1.5 Flash</div></div>
+        <div class="tele-card"><div class="tele-label">Mock Completion</div><div class="tele-val" style="color:var(--green);">81.4%</div><div class="tele-sub">Gate: &gt;75% ✓</div></div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card"><div class="card-title">Market Sizing TAM → SOM</div><div style="height:220px;position:relative;"><canvas id="marketFunnelChart"></canvas></div><div style="font-size:10.5px;color:var(--dim);margin-top:10px;">TAM ₹4,536 Cr · SAM ₹1,926 Cr · SOM ₹33.6 Cr (Y3)</div></div>
+      <div class="card"><div class="card-title">WTP Distribution (n=30)</div><div style="height:220px;position:relative;"><canvas id="wtpChart"></canvas></div></div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card"><div class="card-title">Onboarding Funnel</div><div style="height:200px;position:relative;"><canvas id="dropoffChart"></canvas></div></div>
+      <div class="card"><div class="card-title">Pain Points Mentioned</div><div style="height:200px;position:relative;"><canvas id="painPointChart"></canvas></div></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="card-title" style="margin:0;">Raw Survey Data — n=30</div>
+        <input type="text" id="surveySearch" placeholder="Filter..." onkeyup="filterSurveyTable()"
+          style="padding:6px 12px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:8px;color:var(--text);font-size:12px;outline:none;width:200px;">
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Status</th><th>Role</th><th>Interviews</th><th>Challenge</th><th>Sat</th><th>AI</th><th>WTP</th></tr></thead>
+          <tbody id="surveyTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- ── VIEW: RESUME OPTIMIZER ──────────────────────── -->
+  <div id="view-resume" class="view">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Resume Optimizer</div>
+        <div class="page-subtitle">Upload your resume → compare with JD → get targeted improvement suggestions</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" onclick="switchView('jd')">← Back to JD Simulator</button>
+        <button class="btn btn-primary" onclick="runResumeAnalysis()">🔍 Analyze Now</button>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="card-title">Step 1 — Upload Your Resume</div>
+        <div class="resume-upload-zone" id="resume-drop-zone"
+          ondragover="event.preventDefault();this.style.borderColor='var(--blue)';"
+          ondragleave="this.style.borderColor='';"
+          ondrop="handleResumeFileDrop(event)"
+          onclick="document.getElementById('resume-file-input').click()">
+          <div style="font-size:32px;margin-bottom:10px;">📄</div>
+          <div style="font-size:13px;color:var(--muted);">Drag &amp; drop PDF or TXT<br>or <strong style="color:var(--blue);">click to browse</strong></div>
+          <div style="font-size:11px;color:var(--dim);margin-top:6px;">Max 5 MB</div>
+        </div>
+        <input type="file" id="resume-file-input" accept=".pdf,.txt" style="display:none;" onchange="handleResumeFileSelect(event)">
+        <div id="resume-file-status" style="display:none;font-size:12px;margin-top:10px;padding:8px 12px;background:var(--surface-2);border-radius:8px;"></div>
+        <div id="resume-text-preview" style="display:none;margin-top:12px;font-size:11px;color:var(--muted);line-height:1.7;max-height:150px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r);padding:10px;font-family:'Geist Mono',monospace;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">JD Context (from JD Simulator)</div>
+        <div id="resume-jd-preview" style="font-size:12px;color:var(--muted);line-height:1.7;max-height:200px;overflow-y:auto;">
+          <div style="color:var(--amber);font-size:12px;">⚠ Upload a JD in JD Simulator first, or select a company template.</div>
+        </div>
+        <div style="margin-top:14px;">
+          <div class="card-title" style="margin-bottom:8px;">Or select company for JD context</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <button class="cpill active" onclick="setResumeCompany('tcs',this)">TCS Digital</button>
+            <button class="cpill" onclick="setResumeCompany('cognizant',this)">Cognizant GenC</button>
+            <button class="cpill" onclick="setResumeCompany('infosys',this)">Infosys SP</button>
+            <button class="cpill" onclick="setResumeCompany('wipro',this)">Wipro Elite</button>
+            <button class="cpill" onclick="setResumeCompany('accenture',this)">Accenture ASE</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="resume-analysis-result" style="display:none;">
+      <div class="grid-3" style="margin-bottom:16px;">
+        <div class="card card-sm" style="text-align:center;">
+          <div class="card-title">Resume Match Score</div>
+          <div class="kpi-num sm blue" id="resume-match-score">—</div>
+          <div class="kpi-label">vs Job Description</div>
+        </div>
+        <div class="card card-sm" style="text-align:center;">
+          <div class="card-title">Skills Matched</div>
+          <div class="kpi-num sm green" id="resume-matched-count">—</div>
+          <div class="kpi-label">Keywords found</div>
+        </div>
+        <div class="card card-sm" style="text-align:center;">
+          <div class="card-title">Skills Missing</div>
+          <div class="kpi-num sm" style="color:var(--red);" id="resume-missing-count">—</div>
+          <div class="kpi-label">Add to resume</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:16px;">
+        <div class="card">
+          <div class="card-title">Keyword Analysis</div>
+          <div id="resume-keyword-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🎯 Resume Improvement Suggestions</div>
+          <div id="resume-suggestions"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📝 Rewritten Bullet Points</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">These are JD-optimised rewrites using keywords the recruiter is scanning for:</div>
+        <div id="resume-bullets"></div>
+        <div style="margin-top:14px;">
+          <button class="btn btn-primary" onclick="openMockSession()">▶ Practice Interview Based on This Resume</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── TOAST NOTIFICATION ────────────────────────────── -->
+<div class="toast" id="global-toast"></div>
+
+<!-- ── CHATBOT WIDGET ──────────────────────────────── -->
+<button class="chat-fab" id="chat-fab" onclick="toggleChatbot()" title="PrepPilot AI Assistant">🤖</button>
+<div class="chat-panel" id="chat-panel">
+  <div class="chat-head">
+    <div class="chat-avatar">🤖</div>
+    <div>
+      <div class="chat-name">PrepPilot Assistant</div>
+      <div class="chat-status">● Online — Here to help</div>
+    </div>
+    <button onclick="toggleChatbot()" style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;">✕</button>
+  </div>
+  <div class="chat-body" id="chat-body">
+    <div class="chat-msg bot">Hi! I'm your PrepPilot AI assistant. I can help with <strong>interview prep</strong>, <strong>salary negotiation</strong>, <strong>resume tips</strong>, and more. What do you need help with? 🚀</div>
+  </div>
+  <div class="chat-chips" id="chat-chips">
+    <button class="chat-chip" onclick="chatQuickReply('How to negotiate salary?')">💰 Salary Negotiation</button>
+    <button class="chat-chip" onclick="chatQuickReply('Give me interview tips')">🎯 Interview Tips</button>
+    <button class="chat-chip" onclick="chatQuickReply('How to improve my resume?')">📄 Resume Tips</button>
+    <button class="chat-chip" onclick="chatQuickReply('How to answer Tell me about yourself?')">🗣️ Tell Me About Yourself</button>
+  </div>
+  <div class="chat-input-row">
+    <button class="chat-voice-btn" id="chat-voice-btn" onclick="toggleChatVoice()" title="Voice input">🎤</button>
+    <input class="chat-input" id="chat-input" placeholder="Ask anything..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+    <button class="chat-send" onclick="sendChatMessage()">➤</button>
+  </div>
+</div>
+
+<!-- ── MOCK INTERVIEW MODAL ────────────────────────────────────── -->
+<div id="mock-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Live Mock Interview</div>
+        <div class="modal-sub">PrepPilot Engine · Adaptive AI Interviewer</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--blue);background:var(--blue-dim);padding:4px 10px;border-radius:8px;" id="mock-timer">0s</span>
+        <span style="font-size:11px;color:var(--muted);" id="mock-q-num">Q 1 of 4</span>
+        <button class="btn btn-danger" onclick="closeMockSession()">✕ Exit</button>
+      </div>
+    </div>
+    <!-- Round Selector -->
+    <div id="mock-round-selector" class="round-selector">
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="font-size:13px;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Choose Interview Round</div>
+        <div style="font-size:12px;color:var(--muted);">Questions are based on your uploaded JD + resume skills</div>
+      </div>
+      <div class="round-card selected" id="round-tech" onclick="selectRound('tech')">
+        <div class="round-icon">💻</div>
+        <div>
+          <div class="round-title">Technical Round</div>
+          <div class="round-desc">Programming, System Design, Project Deep-Dive<br>Based on JD tech stack + your resume skills</div>
+        </div>
+        <div style="margin-left:auto;" id="round-tech-check">✓</div>
+      </div>
+      <div class="round-card" id="round-nontech" onclick="selectRound('nontech')">
+        <div class="round-icon">🧐</div>
+        <div>
+          <div class="round-title">Non-Technical Round</div>
+          <div class="round-desc">STAR Behavioral, HR, Salary Negotiation, Culture Fit<br>Helps you handle real-life soft-skill interviews</div>
+        </div>
+        <div style="margin-left:auto;color:var(--muted);" id="round-nontech-check"></div>
+      </div>
+      <div class="round-card" id="round-full" onclick="selectRound('full')">
+        <div class="round-icon">🎯</div>
+        <div>
+          <div class="round-title">Full Interview (Tech + Non-Tech)</div>
+          <div class="round-desc">Complete simulation · 6 questions · 30–40 minutes<br>Closest to a real campus/product company interview</div>
+        </div>
+        <div style="margin-left:auto;color:var(--muted);" id="round-full-check"></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:14px;padding:13px;margin-top:8px;" onclick="startSelectedRound()">▶ Start Interview</button>
+    </div>
+    <div id="mock-main" class="modal-body" style="display:none;">
+      <div style="margin-bottom:16px;"><span id="mock-q-phase" class="tag tag-blue">Warmup</span></div>
+      <div class="q-bubble">
+        <div class="interviewer-row">
+          <div class="avatar">AL</div>
+          <div><div class="interviewer-name">Alex · PrepPilot AI Coach</div><div style="font-size:10px;color:var(--muted);">Senior Engineering Evaluator</div></div>
+          <div class="live-badge"><div class="live-dot"></div> Live</div>
+        </div>
+        <p id="mock-q-text" class="q-text"></p>
+      </div>
+      <div id="mock-scaffold-alert" class="scaffold-alert"><span>⏸</span><div><strong>Nudge from Alex:</strong> "Take your time. Start with the situation — what was your team trying to build?"</div></div>
+      <div id="mock-followup-box" class="followup-box">
+        <div class="followup-label">⚡ Dynamic Follow-Up</div>
+        <p class="followup-text">"You mentioned Redis for scalability — but what specific concurrency bottleneck did you hit, and how did your cache handle sudden out-of-stock updates?"</p>
+      </div>
+      <div class="mock-tele">
+        <div class="mock-tele-card"><div class="mt-label">Filler Words</div><div class="mt-val" id="mock-filler-count">0</div><div style="font-size:10px;color:var(--muted);margin-top:4px;">Target &lt;2/min</div></div>
+        <div class="mock-tele-card"><div class="mt-label">Pacing</div><div class="mt-val" id="mock-wpm" style="color:var(--blue);">—</div><div style="font-size:10px;color:var(--muted);margin-top:4px;">130–160 wpm</div></div>
+        <div class="mock-tele-card"><div class="mt-label">STAR Check</div><div class="mt-val" id="mock-star-result" style="font-size:13px;margin-top:4px;color:var(--muted);">Waiting...</div></div>
+      </div>
+      <div class="answer-box">
+        <div class="answer-box-header">
+          <span>Your response — speak or type</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="v-dot" id="voice-live-dot"></div>
+            <span id="voice-status" style="font-size:10px;color:var(--muted);">Mic off</span>
+            <button class="voice-btn" id="voice-btn" onclick="toggleVoiceInput()">🎙 <span id="voice-btn-label">Start Voice</span></button>
+          </div>
+        </div>
+        <textarea id="mock-transcript" class="mock-textarea" placeholder="Speak (mic) or type your answer here..."></textarea>
+        <div class="inject-row">
+          <button class="inject-btn" onclick="injectSuperficial()" style="background:rgba(240,96,96,0.08);border:1px solid rgba(240,96,96,0.2);color:var(--red);">⚠ Superficial</button>
+          <button class="inject-btn" onclick="injectSTAR()" style="background:rgba(62,207,142,0.08);border:1px solid rgba(62,207,142,0.2);color:var(--green);">✓ STAR Answer</button>
+        </div>
+      </div>
+      <div id="mock-benchmark" style="font-size:11.5px;color:var(--muted);padding:10px 14px;background:var(--surface-2);border-radius:8px;border-left:3px solid var(--border-2);margin-bottom:16px;"></div>
+      <button id="mock-submit-btn" onclick="submitMockAnswer()" class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;">Submit Answer &amp; Continue →</button>
+    </div>
+    <div id="mock-scorecard" class="scorecard">
+      <div class="score-hero">
+        <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Session Complete</div>
+        <div class="big-num" id="sc-score">—</div>
+        <div class="score-label">Explainable Performance Score</div>
+        <div style="margin-top:8px;" id="sc-tier"></div>
+      </div>
+      <div class="grid-2" style="margin-bottom:20px;">
+        <div class="card card-sm" style="text-align:center;"><div class="card-title">Total Fillers</div><div class="kpi-num sm" id="sc-fillers" style="color:var(--red);">—</div></div>
+        <div class="card card-sm" style="text-align:center;"><div class="card-title">Avg Pacing</div><div class="kpi-num sm" id="sc-wpm" style="color:var(--blue);">—</div></div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div class="prog-row"><div class="prog-label">Technical (30%)</div><div class="prog-track"><div id="sc-tech" class="prog-fill" style="width:0%;"></div></div><div class="prog-val" id="sc-tech-val">—</div></div>
+        <div class="prog-row"><div class="prog-label">STAR (25%)</div><div class="prog-track"><div id="sc-star" class="prog-fill" style="width:0%;background:var(--green);"></div></div><div class="prog-val" id="sc-star-val">—</div></div>
+        <div class="prog-row" style="margin-bottom:0;"><div class="prog-label">Clarity (20%)</div><div class="prog-track"><div id="sc-spoken" class="prog-fill" style="width:0%;background:#9b8ef7;"></div></div><div class="prog-val" id="sc-spoken-val">—</div></div>
+      </div>
+      <div class="gap-item" style="margin-bottom:20px;">
+        <div style="font-size:10px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">📍 Root Cause Gap</div>
+        <div id="sc-gap" style="font-size:13px;line-height:1.6;color:var(--muted);">—</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <button onclick="resetMockState();renderQuestion(0);" class="btn btn-ghost" style="justify-content:center;">↺ Retry</button>
+        <button onclick="closeMockSession();" class="btn btn-primary" style="justify-content:center;">→ Dashboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── READINESS REPORT MODAL ──────────────────────────────────── -->
+<div id="report-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width:600px;">
+    <div class="modal-header">
+      <div><div class="modal-title">Readiness Certificate</div><div class="modal-sub">Rahul Sharma · Final Year B.Tech CSE</div></div>
+      <button class="btn btn-danger" onclick="document.getElementById('report-modal').classList.remove('open');document.body.style.overflow='';">✕ Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="card card-sm" style="text-align:center;"><div class="card-title">Score</div><div class="kpi-num sm blue">84</div><div class="kpi-label">/ 100</div></div>
+        <div class="card card-sm" style="text-align:center;"><div class="card-title">Tier</div><div style="font-size:14px;font-weight:800;color:var(--green);margin-top:8px;">🟢 Tier 1</div><div class="kpi-label">Interview Ready</div></div>
+        <div class="card card-sm" style="text-align:center;"><div class="card-title">Sessions</div><div class="kpi-num sm">4</div><div class="kpi-label">+36 pts vs V1</div></div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div class="report-dim-row"><span style="font-size:12px;color:var(--muted);">Technical Depth (30%)</span><div class="report-bar-wrap"><div class="report-bar" style="width:88%;"></div></div><span style="font-size:12px;font-weight:700;color:var(--blue);">88/100</span></div>
+        <div class="report-dim-row"><span style="font-size:12px;color:var(--muted);">STAR Structure (25%)</span><div class="report-bar-wrap"><div class="report-bar" style="width:82%;background:var(--green);"></div></div><span style="font-size:12px;font-weight:700;color:var(--green);">82/100</span></div>
+        <div class="report-dim-row"><span style="font-size:12px;color:var(--muted);">Spoken Clarity (20%)</span><div class="report-bar-wrap"><div class="report-bar" style="width:81%;background:#9b8ef7;"></div></div><span style="font-size:12px;font-weight:700;color:#9b8ef7;">81/100</span></div>
+        <div class="report-dim-row"><span style="font-size:12px;color:var(--muted);">Role Relevance (15%)</span><div class="report-bar-wrap"><div class="report-bar" style="width:86%;background:var(--amber);"></div></div><span style="font-size:12px;font-weight:700;color:var(--amber);">86/100</span></div>
+        <div class="report-dim-row" style="border-bottom:none;"><span style="font-size:12px;color:var(--muted);">Behavioral Conf. (10%)</span><div class="report-bar-wrap"><div class="report-bar" style="width:80%;background:var(--red);"></div></div><span style="font-size:12px;font-weight:700;color:var(--red);">80/100</span></div>
+      </div>
+      <button onclick="window.print()" class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;">🖨 Print / Save PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── THEME ─────────────────────────────────────────────────────
+(function(){
+  const saved=localStorage.getItem('aiview-theme');
+  if(saved==='light'){document.documentElement.setAttribute('data-theme','light');}
+})();
+function toggleTheme(isLight){
+  if(isLight){
+    document.documentElement.setAttribute('data-theme','light');
+    localStorage.setItem('aiview-theme','light');
+    document.getElementById('theme-icon').textContent='☀️';
+    document.getElementById('theme-label').textContent='Light Mode';
+    updateChartTheme(false);
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('aiview-theme','dark');
+    document.getElementById('theme-icon').textContent='🌙';
+    document.getElementById('theme-label').textContent='Dark Mode';
+    updateChartTheme(true);
+  }
+}
+function updateChartTheme(isDark){
+  const textColor=isDark?'#666':'#7a859a';
+  const borderColor=isDark?'#1f1f1f':'#e2e6ec';
+  Chart.defaults.color=textColor;
+  Chart.defaults.borderColor=borderColor;
+  Object.values(Chart.instances).forEach(c=>c.update());
+}
+document.addEventListener('DOMContentLoaded',function(){
+  const saved=localStorage.getItem('aiview-theme');
+  const cb=document.getElementById('theme-checkbox');
+  if(saved==='light'){
+    cb.checked=true;
+    document.getElementById('theme-icon').textContent='☀️';
+    document.getElementById('theme-label').textContent='Light Mode';
+  }
+});
+
+// ── NAVIGATION ────────────────────────────────────────────────
+function switchView(name){
+  ['student','jd','admin','resume'].forEach(v=>{
+    const el=document.getElementById('view-'+v);
+    const nav=document.getElementById('nav-'+v);
+    if(el) el.classList.toggle('active',v===name);
+    if(nav) nav.classList.toggle('active',v===name);
+  });
+  if(name==='jd') initJDView();
+  if(name==='resume') initResumeView();
+  // Clear any stale API errors on view switch
+  const st=document.getElementById('gemini-status');
+  if(st){st.style.display='none';st.textContent='';}
+}
+function openReadinessReport(){document.getElementById('report-modal').classList.add('open');document.body.style.overflow='hidden';}
+
+// ── CHART DEFAULTS ────────────────────────────────────────────
+Chart.defaults.color='#666';
+Chart.defaults.borderColor='#1f1f1f';
+Chart.defaults.font.family="'Geist', system-ui, sans-serif";
+
+// ── COMPANY DATABASE ──────────────────────────────────────────
+const COMPANY_DB={
+  tcs:{name:'TCS Digital',role:'Associate Software Engineer',matchPct:74,
+    jdText:'<strong>TCS Digital — Associate Software Engineer (2024–25)</strong><br><br><strong>Required:</strong> Java or Python, SQL/MySQL, Data Structures & Algorithms, REST API design, Git.<br><br><strong>Good to Have:</strong> React.js, cloud fundamentals, microservices.<br><br><strong>Interview Rounds:</strong> TCS NQT → Technical → HR (STAR behavioral).',
+    requiredSkills:['Java','Python','MySQL','Data Structures','REST APIs','Git','System Design','Algorithms'],
+    gaps:[
+      {type:'critical',title:'System Design Depth',desc:'TCS Digital requires HLD articulation — load balancing, caching, DB sharding.',action:'Study URL shortener + e-commerce checkout HLD. 6 hrs.'},
+      {type:'warning',title:'Redis — Unverified Buzzword',desc:'Agent 2 flagged Redis as unverified. Interview probe showed missing TTL knowledge.',action:'Complete Redis module: Write-Through, Cache-Aside, TTL.'},
+      {type:'ok',title:'Core Java Proficiency',desc:'OOP project discussion verified Collections, generics, exception handling.',action:null},
+    ],
+    questions:[
+      {phase:'Technical',difficulty:'Medium',q:'What is the time complexity of HashMap.get() in Java, and when does it degrade to O(n)?'},
+      {phase:'Technical',difficulty:'Easy',q:'Explain the difference between ArrayList and LinkedList.'},
+      {phase:'Technical',difficulty:'Hard',q:'Design a URL shortener — walk me through data model, API, and caching.'},
+      {phase:'Project Deep-Dive',difficulty:'Hard',q:'How did your Redis cache handle invalidation when a product went out of stock?'},
+      {phase:'STAR Behavioral',difficulty:'Medium',q:'Tell me about a time you fixed a performance bottleneck. What was the before/after metric?'},
+      {phase:'HR',difficulty:'Easy',q:'Why TCS Digital and not TCS Ninja?'},
+    ]},
+  cognizant:{name:'Cognizant GenC Elevate',role:'Programmer Analyst Trainee',matchPct:79,
+    jdText:'<strong>Cognizant GenC Elevate — Programmer Analyst Trainee (2025)</strong><br><br><strong>Required:</strong> Java/Python/C++, RDBMS, data structures, communication skills.<br><br><strong>Interview Rounds:</strong> Online Assessment → Versant English Test → Technical HR.',
+    requiredSkills:['Java','Python','MySQL','HTML/CSS','REST APIs','Communication','React.js'],
+    gaps:[
+      {type:'critical',title:'Versant Spoken Fluency',desc:"Cognizant uses Versant test. Rahul's filler rate 4.2/min (threshold: 2.0) will penalize score.",action:'Record 5-min self-intro daily. Target <2 fillers/min.'},
+      {type:'warning',title:'Agile/Scrum Exposure',desc:'JD mentions Agile awareness. Resume does not mention sprint cycles.',action:'Add "2-week Agile sprints, 5-member scrum team" to resume.'},
+      {type:'ok',title:'Full-Stack Coverage',desc:'React + Node + MySQL project directly aligns with GenC Elevate.',action:null},
+    ],
+    questions:[
+      {phase:'Technical',difficulty:'Medium',q:'What is the difference between SQL JOIN types?'},
+      {phase:'Technical',difficulty:'Hard',q:"Explain the event loop in Node.js vs Java's multi-threading."},
+      {phase:'Communication',difficulty:'Easy',q:'Introduce yourself in 90 seconds — project, achievement, why Cognizant.'},
+      {phase:'Project',difficulty:'Medium',q:'Walk me through one technical challenge. Give me before vs. after numbers.'},
+      {phase:'STAR Behavioral',difficulty:'Medium',q:'Tell me about learning a new tech under time pressure.'},
+      {phase:'HR',difficulty:'Easy',q:'Where do you see yourself in 2 years?'},
+    ]},
+  infosys:{name:'Infosys SP Track',role:'Systems Engineer',matchPct:71,
+    jdText:'<strong>Infosys Systems Engineer — SP Track (2025 InfyTQ)</strong><br><br><strong>Required:</strong> Java or Python, OOP, DBMS, logical aptitude.<br><br><strong>InfyTQ Certification Required</strong> before application.',
+    requiredSkills:['Java','Python','MySQL','OOP','Networking','Linux','Design Patterns'],
+    gaps:[
+      {type:'critical',title:'InfyTQ Certification',desc:'SP track requires InfyTQ platform certification. Not on resume.',action:'Complete Java + DBMS modules at infytq.infosys.com.'},
+      {type:'warning',title:'Design Patterns',desc:'SP track expects Singleton, Factory, Observer patterns.',action:'Study top 5 GOF patterns with Java examples. 4 hrs.'},
+      {type:'ok',title:'Java + OOP Core',desc:'OOP verified in project discussion. Meets SP baseline.',action:null},
+    ],
+    questions:[
+      {phase:'Technical',difficulty:'Hard',q:'Show me a thread-safe Singleton in Java.'},
+      {phase:'Technical',difficulty:'Medium',q:'What is the difference between process and thread?'},
+      {phase:'DBMS',difficulty:'Medium',q:'Explain ACID with a real example from your project.'},
+      {phase:'Project',difficulty:'Hard',q:'What design patterns did you apply? If none, what would you refactor?'},
+      {phase:'STAR Behavioral',difficulty:'Medium',q:"Describe disagreeing with your team's technical approach."},
+      {phase:'HR',difficulty:'Easy',q:'Are you open to relocation?'},
+    ]},
+  wipro:{name:'Wipro Elite NLTH',role:'Project Engineer',matchPct:68,
+    jdText:'<strong>Wipro Elite NLTH — Project Engineer</strong><br><br><strong>Required:</strong> Java/Python/C++, DS&A, DBMS, OS concepts, CN basics.<br><br><strong>Interview:</strong> NLTH Online Test → Technical (Heavy DS/Algo) → HR.',
+    requiredSkills:['Java','Python','Data Structures','Algorithms','OS','Computer Networks','LeetCode'],
+    gaps:[
+      {type:'critical',title:'Competitive Programming Gap',desc:'Wipro Elite expects 200+ LeetCode solved. No CP profile on resume.',action:'3 LeetCode Mediums daily. Focus: Arrays, DP, Trees.'},
+      {type:'critical',title:'OS Concepts',desc:'NLTH asks process scheduling, deadlocks, virtual memory.',action:'Revise GATE OS: Process Management, Deadlock. 4 hrs.'},
+      {type:'warning',title:'Computer Networks',desc:'CN basics (TCP/IP, OSI, HTTP, DNS) are standard questions.',action:'Top 30 CN interview questions — 2-hr revision.'},
+    ],
+    questions:[
+      {phase:'DS/Algo',difficulty:'Hard',q:'Find the length of the longest increasing subsequence using DP.'},
+      {phase:'OS',difficulty:'Hard',q:'Mutex vs semaphore — when does deadlock occur with semaphores?'},
+      {phase:'Networks',difficulty:'Medium',q:'What happens when you type "google.com" — DNS to TCP to render.'},
+      {phase:'Project',difficulty:'Hard',q:'Time and space complexity of your most critical API?'},
+      {phase:'STAR Behavioral',difficulty:'Medium',q:'Optimizing code for performance — what did you measure?'},
+      {phase:'HR',difficulty:'Easy',q:'What is your LeetCode rating?'},
+    ]},
+  accenture:{name:'Accenture ASE',role:'Associate Software Engineer',matchPct:82,
+    jdText:'<strong>Accenture Associate Software Engineer (2025)</strong><br><br><strong>Required:</strong> Any language, basic web tech, DB fundamentals, communication.<br><br><strong>Interview:</strong> Communication Assessment → Cognitive & Technical → HR + Tech combined.',
+    requiredSkills:['Java','Python','MySQL','HTML/CSS','REST APIs','React.js','Communication'],
+    gaps:[
+      {type:'warning',title:'Azure / Cloud Basics',desc:'Accenture prefers Azure. No cloud mention on resume.',action:'Free MS AZ-900 path (8 hrs). Add to resume.'},
+      {type:'ok',title:'React.js Full-Stack',desc:'React + Node + MySQL project matches Accenture stack.',action:null},
+      {type:'ok',title:'Communication',desc:"Accenture's communication test — STAR training directly applies.",action:null},
+    ],
+    questions:[
+      {phase:'Technical',difficulty:'Easy',q:'What makes an API truly RESTful? Show an endpoint example.'},
+      {phase:'Technical',difficulty:'Medium',q:'Authentication vs authorization — how did you implement it?'},
+      {phase:'Project',difficulty:'Easy',q:'2 more weeks on your project — what feature and why?'},
+      {phase:'STAR Behavioral',difficulty:'Medium',q:'Working with someone with a very different style?'},
+      {phase:'Communication',difficulty:'Medium',q:'Explain your project to a non-technical HR manager.'},
+      {phase:'HR',difficulty:'Easy',q:'Switching projects every 12-18 months — how comfortable?'},
+    ]},
+};
+
+const RAHUL_SKILLS=[
+  {skill:'Java',verified:true},{skill:'Python',verified:true},{skill:'MySQL',verified:true},
+  {skill:'HTML/CSS',verified:true},{skill:'React.js',verified:true},{skill:'Node.js',verified:true},
+  {skill:'Git',verified:true},{skill:'REST APIs',verified:true},
+  {skill:'Redis Caching',verified:false},{skill:'Microservices',verified:false},
+  {skill:'Docker',verified:false},{skill:'System Design',verified:false},
+];
+
+let activeCompany='tcs';
+
+function selectCompany(btn,company){
+  document.querySelectorAll('.cpill').forEach(p=>p.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  activeCompany=company;
+  const d=COMPANY_DB[company];
+  document.getElementById('jd-company-badge').textContent=d.name+' — '+d.role;
+  document.getElementById('qbank-badge').textContent=d.name;
+  document.getElementById('jd-text-display').innerHTML=d.jdText;
+  renderResumeSkills(d.requiredSkills);
+  renderQuestionBank(d.questions);
+  document.getElementById('jd-match-pct').textContent='—';
+  document.getElementById('jd-match-bar').style.width='0%';
+  document.getElementById('jd-status').textContent='Click "Run Match Analysis" to begin →';
+  document.getElementById('gap-badge').textContent='Run analysis first';
+  document.getElementById('gap-cards').innerHTML='';
+}
+
+function renderResumeSkills(required){
+  const c=document.getElementById('resume-skills-display');
+  c.innerHTML='';
+  RAHUL_SKILLS.forEach(s=>{
+    const match=required.some(r=>r.toLowerCase()===s.skill.toLowerCase());
+    const color=!s.verified?'var(--red)':match?'var(--green)':'var(--muted)';
+    const bg=!s.verified?'rgba(240,96,96,0.08)':match?'rgba(62,207,142,0.08)':'var(--surface-2)';
+    const border=!s.verified?'rgba(240,96,96,0.2)':match?'rgba(62,207,142,0.2)':'var(--border)';
+    const icon=!s.verified?'🔴':match?'🟢':'⚪';
+    const el=document.createElement('span');
+    el.className='skill-chip';
+    el.style.cssText=`color:${color};background:${bg};border:1px solid ${border};`;
+    el.textContent=icon+' '+s.skill;
+    c.appendChild(el);
+  });
+  required.forEach(req=>{
+    if(!RAHUL_SKILLS.some(s=>s.skill.toLowerCase()===req.toLowerCase())){
+      const el=document.createElement('span');
+      el.className='skill-chip';
+      el.style.cssText='color:var(--dim);background:var(--surface-2);border:1px dashed var(--border-2);';
+      el.textContent='⬜ '+req;
+      c.appendChild(el);
+    }
+  });
+}
+
+function runJDMatch(){
+  const d=COMPANY_DB[activeCompany];
+  let cur=0;
+  document.getElementById('jd-status').textContent='⚡ Parsing JD keywords...';
+  const iv=setInterval(()=>{
+    cur=Math.min(cur+2,d.matchPct);
+    document.getElementById('jd-match-pct').textContent=cur+'%';
+    document.getElementById('jd-match-bar').style.width=cur+'%';
+    if(cur>=d.matchPct){
+      clearInterval(iv);
+      document.getElementById('jd-status').textContent=d.matchPct>=80?'✅ Strong Match':d.matchPct>=70?'⚠️ Partial Match — address gaps':'🔴 Weak Match';
+      renderGapCards(d.gaps);
+      document.getElementById('gap-badge').textContent=d.gaps.length+' gaps · '+d.name;
+    }
+  },25);
+}
+
+function renderGapCards(gaps){
+  const c=document.getElementById('gap-cards');
+  c.innerHTML='';
+  gaps.forEach(g=>{
+    const col=g.type==='critical'?'var(--red)':g.type==='warning'?'var(--amber)':'var(--green)';
+    const icon=g.type==='critical'?'⊘':g.type==='warning'?'⚠':'✓';
+    const div=document.createElement('div');
+    div.className='gap-item '+g.type;
+    div.innerHTML=`<div style="font-size:11px;font-weight:800;color:${col};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">${icon} ${g.type.toUpperCase()}</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">${g.title}</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;">${g.desc}</div>
+      ${g.action?`<div style="font-size:11.5px;color:${col};margin-top:10px;padding:8px 12px;background:rgba(0,0,0,0.2);border-radius:7px;font-weight:600;">→ ${g.action}</div>`:''}`;
+    c.appendChild(div);
+  });
+}
+
+function renderQuestionBank(questions){
+  const c=document.getElementById('question-bank');
+  c.innerHTML='';
+  const DC={Easy:'var(--green)',Medium:'var(--amber)',Hard:'var(--red)'};
+  questions.forEach((q,i)=>{
+    const div=document.createElement('div');
+    div.className='q-row';
+    div.innerHTML=`<div class="q-num">Q${i+1}</div>
+      <div style="flex:1;">
+        <div style="display:flex;gap:8px;margin-bottom:6px;">
+          <span class="tag tag-blue">${q.phase}</span>
+          <span class="tag" style="color:${DC[q.difficulty]};background:rgba(0,0,0,0.2);border:1px solid ${DC[q.difficulty]}40;">${q.difficulty}</span>
+        </div>
+        <div style="font-size:13px;color:var(--text);line-height:1.6;">${q.q}</div>
+      </div>`;
+    c.appendChild(div);
+  });
+}
+
+function launchCompanySim(){
+  const d=COMPANY_DB[activeCompany];
+  MOCK_QUESTIONS.length=0;
+  d.questions.forEach((q,i)=>MOCK_QUESTIONS.push({id:i+1,phase:q.phase,text:q.q,benchmark:q.difficulty+' — '+d.name+' calibrated.',followUpTrigger:(q.phase==='Project Deep-Dive'||q.phase==='Technical')?['redis','cache','fast','microservic','docker']:null}));
+  openMockSession();
+}
+
+function initJDView(){
+  // Clear any stale error messages
+  const st=document.getElementById('gemini-status');
+  if(st){st.style.display='none';st.textContent='';}
+  selectCompany(document.querySelector('[data-company="'+activeCompany+'"]'),activeCompany);
+}
+
+// ── CHARTS ────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  new Chart(document.getElementById('radarCompetencyChart'),{type:'radar',data:{labels:['Technical','STAR','Spoken','Role Fit','Confidence','Pacing'],datasets:[{label:'Rahul (V3)',data:[88,82,81,86,80,85],backgroundColor:'rgba(79,142,247,0.15)',borderColor:'#4F8EF7',borderWidth:2,pointBackgroundColor:'#4F8EF7',pointRadius:3},{label:'TCS Benchmark',data:[80,75,75,80,70,75],backgroundColor:'transparent',borderColor:'#3ecf8e',borderWidth:1.5,borderDash:[4,4],pointBackgroundColor:'#3ecf8e',pointRadius:2}]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{angleLines:{color:'#1f1f1f'},grid:{color:'#1f1f1f'},pointLabels:{color:'#666',font:{size:10}},ticks:{display:false,max:100,min:20}}},plugins:{legend:{labels:{color:'#666',font:{size:10},boxWidth:10}}}}});
+  new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:['V1 Baseline','Day 3','V2 Mock','Day 5','V3 Final'],datasets:[{label:'Score',data:[48,56,64,73,84],borderColor:'#4F8EF7',backgroundColor:'rgba(79,142,247,0.06)',borderWidth:2.5,tension:0.4,fill:true,pointBackgroundColor:'#4F8EF7',pointRadius:4,yAxisID:'y'},{label:'Fillers/min',data:[9.2,7.1,4.8,3.2,1.4],borderColor:'#f06060',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,4],tension:0.4,pointBackgroundColor:'#f06060',pointRadius:3,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{grid:{display:false},ticks:{color:'#3a3a3a',font:{size:10}}},y:{min:30,max:100,grid:{color:'#1f1f1f'},ticks:{color:'#666',font:{size:10}}},y1:{type:'linear',position:'right',min:0,max:12,grid:{drawOnChartArea:false},ticks:{color:'#f06060',font:{size:10}}}},plugins:{legend:{labels:{color:'#666',font:{size:10},boxWidth:10}}}}});
+  new Chart(document.getElementById('marketFunnelChart'),{type:'bar',data:{labels:['TAM','SAM','SOM Y3'],datasets:[{label:'₹ Cr',data:[4536,1926,33.6],backgroundColor:['rgba(79,142,247,0.7)','rgba(79,142,247,0.5)','rgba(62,207,142,0.7)'],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{type:'logarithmic',grid:{color:'#1f1f1f'},ticks:{color:'#666',font:{size:10}}},x:{grid:{display:false},ticks:{color:'#666',font:{size:10}}}}}});
+  new Chart(document.getElementById('wtpChart'),{type:'doughnut',data:{labels:['Free (30%)','One-time (20%)','₹100–199/mo','₹1–99/mo','No Pay','₹200–499/mo','₹500+/mo'],datasets:[{data:[9,6,5,4,3,2,1],backgroundColor:['#3a3a3a','#4F8EF7','#3ecf8e','#9b8ef7','#f06060','#f0a060','#67e8f9'],borderWidth:1,borderColor:'#0f0f0f'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#666',boxWidth:10,font:{size:10}}}}}});
+  new Chart(document.getElementById('dropoffChart'),{type:'bar',data:{labels:['1. Landing','2. Auth','3. Upload','4. Mic','5. Mock','6. Paid'],datasets:[{label:'%',data:[100,68.5,54.2,46.8,38.1,14.8],backgroundColor:'rgba(79,142,247,0.6)',borderRadius:5}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{max:100,ticks:{color:'#666',font:{size:10}},grid:{color:'#1f1f1f'}},y:{ticks:{color:'#666',font:{size:10}},grid:{display:false}}}}});
+  new Chart(document.getElementById('painPointChart'),{type:'bar',data:{labels:['Explaining clearly','What to prepare','Realistic practice','Confidence','HR/Behavioral','Feedback','Tech prep'],datasets:[{label:'Mentions',data:[19,17,7,4,2,2,1],backgroundColor:['#f06060','#f06060','#f0a060','#4F8EF7','#4F8EF7','#9b8ef7','#3ecf8e'],borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#666',font:{size:10}},grid:{color:'#1f1f1f'}},x:{ticks:{color:'#666',font:{size:9.5}},grid:{display:false}}}}});
+  populateSurveyTable();
+  setInterval(()=>{const el=document.getElementById('telemetry-latency');if(el)el.textContent=(482+Math.floor(Math.random()*24)-12)+'ms';},3500);
+});
+
+// ── SURVEY ────────────────────────────────────────────────────
+const surveyData=[
+  {id:1,status:"Final Year",role:"Software / IT",interviews:"1–2",challenge:"Getting realistic practice",sat:4,ai:5,wtp:"One-time"},
+  {id:2,status:"Final Year",role:"SW + Core",interviews:"3–5",challenge:"Explaining answers clearly",sat:3,ai:4,wtp:"One-time"},
+  {id:3,status:"Final Year",role:"Software / IT",interviews:"3–5",challenge:"Knowing what to prepare",sat:4,ai:5,wtp:"Free only"},
+  {id:4,status:"Final Year",role:"SW + Core",interviews:"1–2",challenge:"Building confidence",sat:3,ai:5,wtp:"Free only"},
+  {id:5,status:"1st Year",role:"Software / IT",interviews:"None",challenge:"Knowing what to prepare",sat:1,ai:1,wtp:"Free only"},
+  {id:6,status:"3rd Year",role:"Core Eng",interviews:"None",challenge:"Explaining answers clearly",sat:3,ai:1,wtp:"Free only"},
+  {id:7,status:"Final Year",role:"SW + Core",interviews:"3–5",challenge:"Knowing what to prepare",sat:3,ai:3,wtp:"₹200–499/mo"},
+  {id:8,status:"Final Year",role:"Software / IT",interviews:"6–10",challenge:"Explaining answers clearly",sat:3,ai:5,wtp:"₹1–99/mo"},
+  {id:9,status:"Final Year",role:"Software / IT",interviews:"1–2",challenge:"Explaining answers clearly",sat:2,ai:4,wtp:"Free only"},
+  {id:10,status:"Final Year",role:"SW + Core",interviews:"1–2",challenge:"Preparing for technical",sat:5,ai:5,wtp:"Would not pay"},
+  {id:11,status:"Final Year",role:"SW + Core",interviews:"6–10",challenge:"Explaining answers clearly",sat:3,ai:4,wtp:"One-time"},
+  {id:12,status:"Final Year",role:"SW + Core",interviews:"3–5",challenge:"Knowing what to prepare",sat:3,ai:3,wtp:"₹100–199/mo"},
+  {id:13,status:"Final Year",role:"SW + Biz",interviews:"1–2",challenge:"Explaining answers clearly",sat:2,ai:4,wtp:"One-time"},
+  {id:14,status:"Final Year",role:"Software / IT",interviews:"None",challenge:"Knowing what to prepare",sat:3,ai:4,wtp:"₹1–99/mo"},
+  {id:15,status:"Final Year",role:"Software / IT",interviews:"1–2",challenge:"Explaining answers clearly",sat:3,ai:5,wtp:"Free only"},
+  {id:16,status:"Final Year",role:"Core Eng",interviews:"3–5",challenge:"Knowing what to prepare",sat:3,ai:5,wtp:"One-time"},
+  {id:17,status:"Final Year",role:"Software / IT",interviews:"1–2",challenge:"Getting realistic practice",sat:3,ai:4,wtp:"Free only"},
+  {id:18,status:"Final Year",role:"SW+Core+Biz",interviews:"3–5",challenge:"Explaining answers clearly",sat:2,ai:3,wtp:"Would not pay"},
+  {id:19,status:"Graduate",role:"Business",interviews:">10",challenge:"Explaining answers clearly",sat:3,ai:2,wtp:"Would not pay"},
+  {id:20,status:"Final Year",role:"Software / IT",interviews:"1–2",challenge:"Building confidence",sat:2,ai:4,wtp:"One-time"},
+  {id:21,status:"Final Year",role:"Other",interviews:"1–2",challenge:"Getting realistic practice",sat:4,ai:4,wtp:"₹100–199/mo"},
+  {id:22,status:"Working Pro",role:"Software / IT",interviews:">10",challenge:"Receiving feedback",sat:3,ai:5,wtp:"₹200–499/mo"},
+  {id:23,status:"1st Year",role:"Business",interviews:"None",challenge:"Explaining answers clearly",sat:1,ai:5,wtp:"₹500+/mo"},
+  {id:24,status:"Final Year",role:"Software / IT",interviews:"3–5",challenge:"Building confidence",sat:3,ai:4,wtp:"₹1–99/mo"},
+  {id:25,status:"Final Year",role:"Software / IT",interviews:"3–5",challenge:"Getting realistic practice",sat:2,ai:4,wtp:"₹100–199/mo"},
+  {id:26,status:"Final Year",role:"SW + Biz",interviews:"6–10",challenge:"HR/behavioral prep",sat:3,ai:3,wtp:"Free only"},
+  {id:27,status:"Graduate",role:"Finance",interviews:"None",challenge:"Explaining answers clearly",sat:3,ai:5,wtp:"Free only"},
+  {id:28,status:"Graduate",role:"Software / IT",interviews:">10",challenge:"HR/behavioral prep",sat:3,ai:5,wtp:"₹1–99/mo"},
+  {id:29,status:"Final Year",role:"SW + Core",interviews:"1–2",challenge:"Knowing what to prepare",sat:3,ai:4,wtp:"₹100–199/mo"},
+  {id:30,status:"Final Year",role:"Software / IT",interviews:"1–2",challenge:"Explaining answers clearly",sat:2,ai:4,wtp:"₹100–199/mo"},
+];
+
+function populateSurveyTable(list=surveyData){
+  const tb=document.getElementById('surveyTableBody');
+  tb.innerHTML='';
+  list.forEach(r=>{
+    const tr=document.createElement('tr');
+    const aiC=r.ai>=4?'var(--green)':r.ai>=3?'var(--amber)':'var(--muted)';
+    const wtC=(r.wtp.includes('Free')||r.wtp.includes('not'))?'var(--muted)':'var(--blue)';
+    tr.innerHTML=`<td style="font-family:'Geist Mono';color:var(--dim);">${r.id}</td><td><span class="tag tag-dim">${r.status}</span></td><td style="font-weight:600;">${r.role}</td><td style="color:var(--muted);">${r.interviews}</td><td style="color:#fca5a5;">${r.challenge}</td><td style="color:var(--muted);">${r.sat}/5</td><td style="font-weight:700;color:${aiC};">${r.ai}/5</td><td style="font-weight:600;color:${wtC};">${r.wtp}</td>`;
+    tb.appendChild(tr);
+  });
+}
+function filterSurveyTable(){const q=document.getElementById('surveySearch').value.toLowerCase();populateSurveyTable(surveyData.filter(d=>d.role.toLowerCase().includes(q)||d.challenge.toLowerCase().includes(q)||d.status.toLowerCase().includes(q)||d.wtp.toLowerCase().includes(q)));}
+
+// ── JD UPLOAD ────────────────────────────────────────────────
+let customJDText='',jdInputMode='paste';
+function setJDInputMode(mode){
+  jdInputMode=mode;const p=mode==='paste';
+  document.getElementById('jd-paste-area').style.display=p?'block':'none';
+  document.getElementById('jd-file-area').style.display=p?'none':'block';
+  document.getElementById('jd-mode-paste').classList.toggle('active',p);
+  document.getElementById('jd-mode-file').classList.toggle('active',!p);
+  // Clear any error on mode switch
+  const st=document.getElementById('gemini-status');
+  if(st){st.style.display='none';st.textContent='';}
+}
+function validateCustomJD(){
+  const t=document.getElementById('jd-custom-text').value;customJDText=t;const n=t.trim().length;
+  document.getElementById('jd-char-count').textContent=n+' chars';
+  document.getElementById('jd-char-count').style.color=n>=100?'var(--green)':'var(--red)';
+  document.getElementById('jd-validation-hint').textContent=n<100?'Too short — paste complete JD':n<400?'JD seems brief':'✓ Ready';
+  document.getElementById('jd-validation-hint').style.color=n>=400?'var(--green)':n>=100?'var(--amber)':'var(--muted)';
+}
+function handleJDFileDrop(e){e.preventDefault();document.getElementById('jd-dropzone').classList.remove('drag');const f=e.dataTransfer.files[0];if(f)processJDFile(f);}
+function handleJDFileSelect(e){if(e.target.files[0])processJDFile(e.target.files[0]);}
+function processJDFile(file){
+  const s=document.getElementById('jd-file-status');s.style.display='block';
+  if(file.size>5*1024*1024){s.textContent='❌ File too large (max 5 MB)';s.style.color='var(--red)';return;}
+  if(!file.name.match(/\.(txt|pdf)$/i)){s.textContent='❌ Only .txt or .pdf files allowed';s.style.color='var(--red)';return;}
+  s.innerHTML='<span style="color:var(--amber)">⏳ Reading file...</span>';s.style.color='';
+  if(file.name.toLowerCase().endsWith('.txt')){
+    const r=new FileReader();
+    r.onload=e=>{customJDText=e.target.result;s.innerHTML='<span style="color:var(--green)">✓ '+file.name+' — '+customJDText.length+' chars extracted</span>';updateJDDisplay();};
+    r.onerror=()=>{s.innerHTML='<span style="color:var(--red)">❌ Could not read file</span>';};
+    r.readAsText(file);
+  } else {
+    // PDF extraction using PDF.js
+    if(!window.pdfjsLib){
+      s.innerHTML='<span style="color:var(--red)">❌ PDF library not loaded — try refreshing the page</span>';return;
+    }
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const reader=new FileReader();
+    reader.onload=async function(e){
+      try{
+        s.innerHTML='<span style="color:var(--amber)">📄 Parsing PDF...</span>';
+        const typedArray=new Uint8Array(e.target.result);
+        const pdf=await pdfjsLib.getDocument({data:typedArray}).promise;
+        const totalPages=pdf.numPages;
+        let fullText='';
+        for(let i=1;i<=totalPages;i++){
+          s.innerHTML='<span style="color:var(--amber)">📄 Extracting page '+i+' / '+totalPages+'...</span>';
+          const page=await pdf.getPage(i);
+          const content=await page.getTextContent();
+          const pageText=content.items.map(item=>item.str).join(' ');
+          fullText+=pageText+'\n';
+        }
+        fullText=fullText.replace(/\s{3,}/g,'\n').trim();
+        if(fullText.length<50){
+          s.innerHTML='<span style="color:var(--amber)">⚠️ PDF text is very short ('+fullText.length+' chars). It may be a scanned image PDF — try pasting the JD as text instead.</span>';
+        } else {
+          customJDText=fullText;
+          s.innerHTML='<span style="color:var(--green)">✓ '+file.name+' — '+totalPages+' page'+(totalPages>1?'s':'')+' · '+fullText.length+' chars extracted ✓</span>';
+          updateJDDisplay();
+        }
+      }catch(err){
+        s.innerHTML='<span style="color:var(--red)">❌ PDF parse error: '+err.message+'</span>';
+      }
+    };
+    reader.onerror=()=>{s.innerHTML='<span style="color:var(--red)">❌ Could not read file</span>';};
+    reader.readAsArrayBuffer(file);
+  }
+}
+function updateJDDisplay(){
+  const d=document.getElementById('jd-text-display');
+  if(d && customJDText && !customJDText.startsWith('PDF:')){
+    d.innerHTML=customJDText.substring(0,1200).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')+(customJDText.length>1200?'<br><em style="color:var(--dim);">...'+Math.max(0,customJDText.length-1200)+' more chars</em>':'');
+  }
+  // Show next-steps panel, hide the default row
+  const ns=document.getElementById('upload-next-steps');
+  const dr=document.getElementById('default-api-row');
+  if(ns) ns.style.display='block';
+  if(dr) dr.style.display='none';
+  // Clear any previous API key error
+  const st=document.getElementById('gemini-status');
+  if(st){st.style.display='none';st.textContent='';}
+  // Auto-run match analysis
+  runJDMatch();
+}
+function launchWithTemplates(){
+  // Use the currently selected company's questions for the mock
+  const activeCompany=document.querySelector('.cpill.active');
+  const companyKey=activeCompany?activeCompany.getAttribute('data-company'):'tcs';
+  const company=COMPANY_DB[companyKey];
+  if(company && company.questions){
+    MOCK_QUESTIONS.length=0;
+    company.questions.forEach((q,i)=>{
+      MOCK_QUESTIONS.push({id:i+1,phase:q.phase,text:q.q,benchmark:q.difficulty+' — '+company.name+' template.',followUpTrigger:null});
+    });
+  }
+  openMockSession();
+}
+
+// ── GEMINI API ────────────────────────────────────────────────
+async function analyzeJDWithGemini(){
+  // Support both the upload-panel key input and default key input
+  const keyEl=document.getElementById('gemini-api-key');
+  const keyDefault=document.getElementById('gemini-api-key-default');
+  const key=(keyEl?keyEl.value.trim():'') || (keyDefault?keyDefault.value.trim():'');
+  const jd=jdInputMode==='paste'?document.getElementById('jd-custom-text').value.trim():customJDText.trim();
+  const st=document.getElementById('gemini-status');const btn=document.getElementById('gemini-analyze-btn');
+  if(!key.startsWith('AIza')){st.style.display='block';st.style.color='var(--red)';st.textContent='❌ Invalid API key.';return;}
+  if(jd.length<100){st.style.display='block';st.style.color='var(--red)';st.textContent='❌ JD too short.';return;}
+  btn.disabled=true;btn.textContent='Analyzing...';
+  st.style.display='block';st.style.color='var(--amber)';st.textContent='🔄 Sending to Gemini 1.5 Flash...';
+  const prompt=`You are an expert interview coach. Analyze this Job Description and generate exactly 5 interview questions a real interviewer would ask. Format each as:\nPHASE: [Technical|STAR Behavioral|Project Deep-Dive|HR|Communication]\nDIFFICULTY: [Easy|Medium|Hard]\nQUESTION: [question]\nFOLLOW_UP: [follow-up]\n\nJD:\n${jd.substring(0,6000)}`;
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.4,maxOutputTokens:1200}})});
+    if(!res.ok) throw new Error('API '+res.status);
+    const d=await res.json();const raw=d.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    if(!raw) throw new Error('Empty response');
+    const qs=parseGeminiQuestions(raw);
+    if(!qs.length) throw new Error('Could not parse questions');
+    MOCK_QUESTIONS.length=0;
+    qs.forEach((q,i)=>MOCK_QUESTIONS.push({id:i+1,phase:q.phase,text:q.question,benchmark:q.difficulty+' — Gemini generated.',followUpTrigger:null}));
+    st.style.color='var(--green)';st.innerHTML='✓ <strong>'+qs.length+' questions generated</strong> — click Launch Simulation.';
+    btn.disabled=false;btn.textContent='▶ Launch Interview';btn.onclick=()=>openMockSession();btn.style.background='var(--green)';btn.style.color='#000';
+  }catch(e){st.style.color='var(--red)';st.textContent='❌ '+e.message;btn.disabled=false;btn.textContent='✨ Generate with Gemini';}
+}
+function parseGeminiQuestions(raw){
+  const qs=[];
+  raw.split(/\n(?=PHASE:)/i).filter(b=>b.trim()).forEach(b=>{
+    const phase=(b.match(/^PHASE:\s*(.+)/im)||[])[1]?.trim()||'Technical';
+    const diff=(b.match(/^DIFFICULTY:\s*(.+)/im)||[])[1]?.trim()||'Medium';
+    const q=(b.match(/^QUESTION:\s*(.+)/im)||[])[1]?.trim()||'';
+    const fu=(b.match(/^FOLLOW_UP:\s*(.+)/im)||[])[1]?.trim()||'';
+    if(q) qs.push({phase,difficulty:diff,question:q,followUp:fu});
+  });
+  if(!qs.length) raw.split('\n').filter(l=>l.length>20&&!l.match(/^(PHASE|DIFFICULTY|FOLLOW_UP):/i)).slice(0,5).forEach((l,i)=>qs.push({phase:['Technical','STAR Behavioral','Project Deep-Dive','HR','Communication'][i]||'Technical',difficulty:'Medium',question:l.replace(/^[0-9.\-*]+\s*/,'').trim(),followUp:''}));
+  return qs.slice(0,5);
+}
+
+// ── VOICE ─────────────────────────────────────────────────────
+let recognition=null,isRecording=false;
+function initSpeech(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;
+  const r=new SR();r.lang='en-IN';r.continuous=true;r.interimResults=true;
+  r.onresult=e=>{let fin='',int='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=t+' ';else int+=t;}const ta=document.getElementById('mock-transcript');if(fin)ta.value=(ta.value+fin).trim()+' ';if(int)document.getElementById('voice-status').textContent='"'+int.substring(0,50)+'..."';ta.dispatchEvent(new Event('input'));};
+  r.onerror=e=>{document.getElementById('voice-status').textContent='Mic error: '+e.error;stopVoice();};
+  r.onend=()=>{if(isRecording)r.start();};
+  return r;
+}
+function toggleVoiceInput(){isRecording?stopVoice():startVoice();}
+function startVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){document.getElementById('voice-status').textContent='Use Chrome/Edge';return;}
+  if(!recognition)recognition=initSpeech();
+  try{recognition.start();isRecording=true;const b=document.getElementById('voice-btn');b.classList.add('recording');document.getElementById('voice-btn-label').textContent='Stop Voice';document.getElementById('voice-status').textContent='🔴 Recording...';document.getElementById('voice-live-dot').style.display='inline-block';}
+  catch(e){document.getElementById('voice-status').textContent='Mic error: '+e.message;}
+}
+function stopVoice(){
+  if(recognition){try{recognition.stop();}catch(e){}}
+  isRecording=false;const b=document.getElementById('voice-btn');
+  if(b){b.classList.remove('recording');document.getElementById('voice-btn-label').textContent='Start Voice';document.getElementById('voice-status').textContent='Mic off';document.getElementById('voice-live-dot').style.display='none';}
+}
+function stopVoiceInput(){stopVoice();}
+
+// ── MOCK SESSION ENGINE ───────────────────────────────────────
+const MOCK_QUESTIONS=[
+  {id:1,phase:'Warmup',text:'Walk me through what inspired you to build your e-commerce project in your final year.',benchmark:'Clear intro under 60s with genuine motivation.',followUpTrigger:null},
+  {id:2,phase:'Core Technical',text:'In MySQL, explain how B-Tree indexing improves query performance — and why indexing every column is a bad idea.',benchmark:'Explain log-time search vs insert/update write penalty.',followUpTrigger:null},
+  {id:3,phase:'Adversarial Resume',text:"I see Redis caching on your resume. Walk me through your cache invalidation strategy when a product goes out of stock.",benchmark:'Must articulate Cache-Aside or Write-Through, TTL, stale data prevention.',followUpTrigger:['redis','cache','fast','in-memory','scalab']},
+  {id:4,phase:'STAR Behavioral',text:'Tell me about a time your team missed an internal project deadline. What exactly did you do about it?',benchmark:'Must use STAR: Situation, Task, Action, Quantified Result.',followUpTrigger:null},
+];
+let mockState={currentQ:0,turnTimer:null,timerSec:0,followUpFired:false,sessionComplete:false,answers:[]};
+// ── TOAST ─────────────────────────────────────────────────────
+function showToast(msg,type='info',dur=4000){
+  const t=document.getElementById('global-toast');
+  t.textContent=msg;t.className='toast '+type+' show';
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// ── ROUND SELECTOR ────────────────────────────────────────────────
+let selectedRound='tech';
+function selectRound(type){
+  selectedRound=type;
+  ['tech','nontech','full'].forEach(r=>{
+    const el=document.getElementById('round-'+r);
+    const ck=document.getElementById('round-'+r+'-check');
+    if(el) el.classList.toggle('selected',r===type);
+    if(ck){ck.textContent=r===type?'✓':'';ck.style.color=r===type?'var(--blue)':'var(--muted)';}
+  });
+}
+const TECH_QUESTIONS_BANK=[
+  {phase:'Technical',text:'What is the time complexity of HashMap.get()? When does it degrade to O(n)?',benchmark:'Must mention hash collision, linked list chain.',followUpTrigger:null},
+  {phase:'Technical',text:'Explain database indexing. Why can\'t you index every column?',benchmark:'B-tree structure, write penalty on insert/update.',followUpTrigger:null},
+  {phase:'System Design',text:'Design a URL shortener — data model, API, and caching strategy.',benchmark:'Mention hash, DB schema, Redis/CDN caching.',followUpTrigger:null},
+  {phase:'Technical',text:'What is the difference between SQL JOIN types? Give examples.',benchmark:'INNER, LEFT, RIGHT, FULL with real use cases.',followUpTrigger:null},
+  {phase:'Project Deep-Dive',text:'Walk me through the most technically challenging part of your resume project.',benchmark:'STAR structure with metrics (latency/users/% improvement).',followUpTrigger:['redis','cache','api','database','sql']},
+  {phase:'Technical',text:'Explain REST vs GraphQL. When would you choose each?',benchmark:'REST stateless, GraphQL flexible queries, over-fetching.',followUpTrigger:null},
+];
+const NONTECH_QUESTIONS_BANK=[
+  {phase:'STAR Behavioral',text:'Tell me about a time you missed a deadline. What did you do about it?',benchmark:'STAR: Situation, Task, Action, Quantified Result.',followUpTrigger:null},
+  {phase:'HR',text:'Tell me about yourself — in under 90 seconds.',benchmark:'Past (education/skills) → Present (project) → Future (why this company).',followUpTrigger:null},
+  {phase:'Negotiation',text:'If we offer you ₹X LPA, would you accept? How did you arrive at your expected CTC?',benchmark:'Research market rate, justify with skills/projects, negotiate respectfully.',followUpTrigger:null},
+  {phase:'STAR Behavioral',text:'Describe a conflict with a teammate. How did you resolve it?',benchmark:'Focus on listening, finding common ground, outcome.',followUpTrigger:null},
+  {phase:'HR',text:'Why do you want to work at this company specifically?',benchmark:'Show company research, role alignment, growth plans.',followUpTrigger:null},
+  {phase:'Culture Fit',text:'Where do you see yourself in 3 years?',benchmark:'Ambitious but realistic, aligned with company\'s growth path.',followUpTrigger:null},
+];
+function buildQuestionsFromJD(roundType){
+  const jdLower=(customJDText||'').toLowerCase();
+  const resumeLower=(resumeText||'').toLowerCase();
+  let questions=[];
+  if(roundType==='tech'||roundType==='full'){
+    let techQs=[...TECH_QUESTIONS_BANK];
+    // Prioritise questions matching JD keywords
+    const jdKeywords=['java','python','node','react','sql','mysql','redis','docker','kubernetes','api','microservice','system design'];
+    techQs.sort((a,b)=>{
+      const aScore=jdKeywords.filter(k=>a.text.toLowerCase().includes(k)||jdLower.includes(k)).length;
+      const bScore=jdKeywords.filter(k=>b.text.toLowerCase().includes(k)||jdLower.includes(k)).length;
+      return bScore-aScore;
+    });
+    questions=questions.concat(techQs.slice(0,roundType==='full'?3:4));
+  }
+  if(roundType==='nontech'||roundType==='full'){
+    questions=questions.concat(NONTECH_QUESTIONS_BANK.slice(0,roundType==='full'?3:4));
+  }
+  return questions.map((q,i)=>({id:i+1,...q,benchmark:q.benchmark+(customJDText?' [JD-matched]':' [Template]')}));
+}
+function startSelectedRound(){
+  MOCK_QUESTIONS.length=0;
+  const qs=buildQuestionsFromJD(selectedRound);
+  qs.forEach(q=>MOCK_QUESTIONS.push(q));
+  document.getElementById('mock-round-selector').style.display='none';
+  document.getElementById('mock-main').style.display='block';
+  resetMockState();
+  renderQuestion(0);
+}
+function openMockSession(){
+  document.getElementById('mock-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+  // Reset and show round selector
+  document.getElementById('mock-round-selector').style.display='block';
+  document.getElementById('mock-main').style.display='none';
+  const sc=document.getElementById('mock-scorecard');
+  if(sc) sc.style.display='none';
+  clearInterval(mockState?.turnTimer);
+  stopVoice();
+}
+function closeMockSession(){document.getElementById('mock-modal').classList.remove('open');document.body.style.overflow='';clearInterval(mockState.turnTimer);stopVoice();}
+function resetMockState(){
+  mockState={currentQ:0,timerSec:0,followUpFired:false,sessionComplete:false,answers:[]};
+  clearInterval(mockState.turnTimer);
+  document.getElementById('mock-transcript').value='';
+  document.getElementById('mock-filler-count').textContent='0';
+  document.getElementById('mock-wpm').textContent='—';
+  document.getElementById('mock-star-result').textContent='Waiting...';
+  document.getElementById('mock-star-result').style.color='var(--muted)';
+  document.getElementById('mock-scaffold-alert').style.display='none';
+  document.getElementById('mock-scorecard').style.display='none';
+  document.getElementById('mock-main').style.display='block';
+  document.getElementById('mock-submit-btn').disabled=false;
+  document.getElementById('mock-submit-btn').textContent='Submit Answer & Continue →';
+  stopVoice();
+}
+function renderQuestion(idx){
+  const q=MOCK_QUESTIONS[idx];if(!q){showScorecard();return;}
+  mockState.followUpFired=false;
+  document.getElementById('mock-q-num').textContent='Q '+(idx+1)+' of '+MOCK_QUESTIONS.length;
+  document.getElementById('mock-q-phase').textContent=q.phase;
+  document.getElementById('mock-q-text').textContent='"'+q.text+'"';
+  document.getElementById('mock-benchmark').textContent='💡 '+q.benchmark;
+  document.getElementById('mock-transcript').value='';
+  document.getElementById('mock-transcript').placeholder='Speak (mic) or type your answer...';
+  document.getElementById('mock-filler-count').textContent='0';
+  document.getElementById('mock-wpm').textContent='—';
+  document.getElementById('mock-star-result').textContent='Waiting...';
+  document.getElementById('mock-star-result').style.color='var(--muted)';
+  document.getElementById('mock-scaffold-alert').style.display='none';
+  document.getElementById('mock-followup-box').style.display='none';
+  document.getElementById('mock-submit-btn').disabled=false;
+  document.getElementById('mock-submit-btn').textContent='Submit Answer & Continue →';
+  mockState.timerSec=0;clearInterval(mockState.turnTimer);
+  mockState.turnTimer=setInterval(()=>{mockState.timerSec++;document.getElementById('mock-timer').textContent=mockState.timerSec+'s';if(mockState.timerSec>5&&document.getElementById('mock-transcript').value.trim().length<5)document.getElementById('mock-scaffold-alert').style.display='flex';},1000);
+}
+function analyzeTranscript(text){
+  const FILLERS=['basically','actually','like','you know','so like','kind of','sort of','umm','uh','hmm'];
+  const words=text.trim().split(/\s+/).filter(Boolean);
+  const wpm=mockState.timerSec>0?Math.round((words.length/mockState.timerSec)*60):0;
+  let fc=0;FILLERS.forEach(f=>{const m=text.match(new RegExp('\\b'+f+'\\b','gi'));if(m)fc+=m.length;});
+  const low=text.toLowerCase();
+  return{wpm,fillerCount:fc,wordCount:words.length,hasSituation:low.includes('when')||low.includes('during')||low.includes('our team'),hasAction:/ i /.test(low)||['implemented','built','fixed','added','created'].some(w=>low.includes(w)),hasResult:/\d+%|\d+ ms|\d+ seconds|\d+ users|reduced|improved|increased|saved/.test(low)};
+}
+function injectSuperficial(){const ta=document.getElementById('mock-transcript');ta.value="Sir actually in our project we used Redis because it is very fast and in-memory. Basically whenever user requests product it checks Redis first making it very scalable.";ta.dispatchEvent(new Event('input'));}
+function injectSTAR(){const ta=document.getElementById('mock-transcript');ta.value="During our final year project our 4-person team built an e-commerce portal. We had a 4.2 second latency in checkout due to unindexed SQL queries. I implemented Redis key caching with Write-Through invalidation and a 60s TTL. This reduced checkout latency by 78% from 4.2s to 900ms and our portal handled 200 concurrent users without timeout.";ta.dispatchEvent(new Event('input'));}
+document.addEventListener('DOMContentLoaded',()=>{
+  const ta=document.getElementById('mock-transcript');
+  if(ta)ta.addEventListener('input',()=>{
+    const{wpm,fillerCount,hasSituation,hasAction,hasResult}=analyzeTranscript(ta.value);
+    const fc=document.getElementById('mock-filler-count');fc.textContent=fillerCount;fc.style.color=fillerCount>2?'var(--red)':'var(--green)';
+    document.getElementById('mock-wpm').textContent=wpm>0?wpm+' wpm':'—';
+    const se=document.getElementById('mock-star-result');
+    if(hasResult){se.textContent='✓ STAR Complete';se.style.color='var(--green)';}
+    else if(hasAction){se.textContent='⚠ Add a Result';se.style.color='var(--amber)';}
+    else if(hasSituation){se.textContent='Add Action + Result';se.style.color='var(--blue)';}
+    else{se.textContent='Waiting...';se.style.color='var(--muted)';}
+    if(ta.value.trim().length>5)document.getElementById('mock-scaffold-alert').style.display='none';
+  });
+});
+function submitMockAnswer(){
+  const text=document.getElementById('mock-transcript').value.trim();
+  if(!text){document.getElementById('mock-scaffold-alert').style.display='flex';return;}
+  clearInterval(mockState.turnTimer);
+  const an=analyzeTranscript(text);const q=MOCK_QUESTIONS[mockState.currentQ];
+  if(q.followUpTrigger&&!mockState.followUpFired){
+    const low=text.toLowerCase();const hasKw=q.followUpTrigger.some(kw=>low.includes(kw));
+    const missingDepth=!low.includes('invalidat')&&!low.includes('ttl')&&!low.includes('stale')&&!low.includes('latency');
+    if(hasKw&&missingDepth){
+      mockState.followUpFired=true;document.getElementById('mock-followup-box').style.display='block';
+      document.getElementById('mock-submit-btn').textContent='Submit Follow-Up & Continue →';
+      document.getElementById('mock-transcript').value='';document.getElementById('mock-transcript').placeholder='Answer the follow-up above...';
+      mockState.timerSec=0;mockState.turnTimer=setInterval(()=>{mockState.timerSec++;document.getElementById('mock-timer').textContent=mockState.timerSec+'s';},1000);
+      return;
+    }
+  }
+  mockState.answers.push({qId:q.id,text,...an});mockState.currentQ++;
+  mockState.currentQ>=MOCK_QUESTIONS.length?showScorecard():renderQuestion(mockState.currentQ);
+}
+function showScorecard(){
+  clearInterval(mockState.turnTimer);
+  document.getElementById('mock-main').style.display='none';document.getElementById('mock-scorecard').style.display='block';
+  let tF=0,hR=0,aW=0;
+  mockState.answers.forEach(a=>{tF+=a.fillerCount;if(a.hasResult)hR++;aW+=a.wpm;});
+  const n=Math.max(mockState.answers.length,1);aW=Math.round(aW/n);
+  const ss=Math.min(100,Math.round((hR/n)*100*0.7+40));const fp=Math.min(30,tF*5);
+  const sp=Math.max(40,Math.min(100,85-fp+(aW>=120&&aW<=170?10:0)));
+  const ts=82,rs=80,cs=78;
+  const comp=Math.round(0.30*ts+0.25*ss+0.20*sp+0.15*rs+0.10*cs);
+  const tier=comp>=85?'🟢 Tier 1 — Interview Ready':comp>=70?'🟡 Tier 2 — Placement Contender':comp>=50?'🟠 Tier 3 — Developing':'🔴 Tier 4 — Foundational Gap';
+  document.getElementById('sc-score').textContent=comp;
+  document.getElementById('sc-tier').innerHTML='<span class="tag '+(comp>=85?'tag-green':comp>=70?'tag-amber':'tag-red')+'">'+tier+'</span>';
+  document.getElementById('sc-tech').style.width=ts+'%';document.getElementById('sc-star').style.width=ss+'%';document.getElementById('sc-spoken').style.width=sp+'%';
+  document.getElementById('sc-tech-val').textContent=ts+'%';document.getElementById('sc-star-val').textContent=ss+'%';document.getElementById('sc-spoken-val').textContent=sp+'%';
+  document.getElementById('sc-fillers').textContent=tF;document.getElementById('sc-wpm').textContent=aW;
+  document.getElementById('sc-gap').textContent=ss<75?'❌ STAR Result Omission — No measurable outcome quoted. Add % reduction, ms latency, or user count.':'✅ Good structure. Keep quantifying results.';
+  document.getElementById('sc-gap').style.color=ss<75?'#fca5a5':'#a7f3d0';
+}
+
+// ── RESUME OPTIMIZER ──────────────────────────────────────────
+let resumeText='',resumeCompanyKey='tcs';
+function initResumeView(){
+  if(customJDText&&customJDText.length>50){
+    const d=document.getElementById('resume-jd-preview');
+    if(d) d.textContent=customJDText.substring(0,500)+'...';
+  }
+}
+function setResumeCompany(key,btn){
+  resumeCompanyKey=key;
+  document.querySelectorAll('#view-resume .cpill').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+function handleResumeFileDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f)processResumeFile(f);}
+function handleResumeFileSelect(e){if(e.target.files[0])processResumeFile(e.target.files[0]);}
+function processResumeFile(file){
+  const s=document.getElementById('resume-file-status');s.style.display='block';
+  if(file.size>5*1024*1024){s.innerHTML='<span style="color:var(--red)">❌ File too large</span>';return;}
+  s.innerHTML='<span style="color:var(--amber)">⏳ Reading resume...</span>';
+  if(file.name.toLowerCase().endsWith('.txt')){
+    const r=new FileReader();
+    r.onload=e=>{resumeText=e.target.result;s.innerHTML='<span style="color:var(--green)">✓ '+file.name+' — '+resumeText.length+' chars</span>';showResumePreview();};
+    r.readAsText(file);
+  } else {
+    if(!window.pdfjsLib){s.innerHTML='<span style="color:var(--red)">❌ PDF library not loaded</span>';return;}
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const reader=new FileReader();
+    reader.onload=async function(e){
+      try{
+        const typedArray=new Uint8Array(e.target.result);
+        const pdf=await pdfjsLib.getDocument({data:typedArray}).promise;
+        let text='';
+        for(let i=1;i<=pdf.numPages;i++){
+          s.innerHTML='<span style="color:var(--amber)">📄 Reading page '+i+'/'+pdf.numPages+'...</span>';
+          const page=await pdf.getPage(i);
+          const c=await page.getTextContent();
+          text+=c.items.map(x=>x.str).join(' ')+'\n';
+        }
+        resumeText=text.replace(/\s{3,}/g,'\n').trim();
+        s.innerHTML='<span style="color:var(--green)">✓ '+file.name+' — '+pdf.numPages+' pages · '+resumeText.length+' chars extracted</span>';
+        showResumePreview();
+      }catch(err){s.innerHTML='<span style="color:var(--red)">❌ '+err.message+'</span>';}
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+function showResumePreview(){
+  const p=document.getElementById('resume-text-preview');
+  if(p){p.style.display='block';p.textContent=resumeText.substring(0,600)+(resumeText.length>600?'...':'');}
+}
+const ALL_SKILLS=['java','python','javascript','typescript','react','node','sql','mysql','postgresql','mongodb','redis','docker','kubernetes','git','aws','gcp','azure','rest','api','graphql','spring','express','django','flask','microservices','system design','data structures','algorithms','html','css','figma','linux','ci/cd','devops','machine learning','ai','llm','flutter','android','ios','swift','kotlin','c++','c#','golang','rust','agile','scrum'];
+function runResumeAnalysis(){
+  if(!resumeText){showToast('Please upload your resume first','error');return;}
+  const jdSrc=customJDText&&customJDText.length>50?customJDText:(COMPANY_DB[resumeCompanyKey]?.jdText?.replace(/<[^>]*>/g,'')||'');
+  const resumeLow=resumeText.toLowerCase();
+  const jdLow=jdSrc.toLowerCase();
+  const jdSkills=ALL_SKILLS.filter(s=>jdLow.includes(s));
+  const matched=jdSkills.filter(s=>resumeLow.includes(s));
+  const missing=jdSkills.filter(s=>!resumeLow.includes(s));
+  const matchPct=jdSkills.length?Math.round((matched.length/jdSkills.length)*100):0;
+  document.getElementById('resume-match-score').textContent=matchPct+'%';
+  document.getElementById('resume-matched-count').textContent=matched.length;
+  document.getElementById('resume-missing-count').textContent=missing.length;
+  // Keyword list
+  const kl=document.getElementById('resume-keyword-list');
+  kl.innerHTML='';
+  jdSkills.forEach(sk=>{
+    const found=resumeLow.includes(sk);
+    kl.innerHTML+=`<div class="skill-match-row"><div class="skill-status" style="background:${found?'var(--green)':'var(--red)'}"></div><span style="font-size:12px;text-transform:capitalize;">${sk}</span><span style="margin-left:auto;font-size:10px;color:${found?'var(--green)':'var(--red)'};font-weight:700;">${found?'✓ Found':'✗ Missing'}</span></div>`;
+  });
+  // Suggestions
+  const sg=document.getElementById('resume-suggestions');
+  sg.innerHTML='';
+  const suggestions=[];
+  if(missing.length>0) suggestions.push(`Add these missing skills to your Skills section: <strong>${missing.slice(0,5).map(s=>s.toUpperCase()).join(', ')}</strong>`);
+  if(!resumeLow.includes('%')&&!resumeLow.includes('percent')) suggestions.push('Add <strong>quantified metrics</strong> to your experience bullets (e.g., "reduced latency by 40%", "handled 10,000 requests/day")');
+  if(!resumeLow.includes('github')&&!resumeLow.includes('gitlab')) suggestions.push('Add your <strong>GitHub profile link</strong> — recruiters check it for your actual code');
+  if((resumeText.match(/\n/g)||[]).length>60) suggestions.push('Your resume appears long. <strong>Trim to 1 page</strong> for fresher/campus roles');
+  if(!resumeLow.includes('intern')&&!resumeLow.includes('project')) suggestions.push('Add at least <strong>2 projects</strong> with tech stack, problem solved, and impact');
+  suggestions.push(`Tailor your <strong>Professional Summary</strong> to mention ${(COMPANY_DB[resumeCompanyKey]?.name)||'the company'} specifically`);
+  suggestions.forEach(s=>{sg.innerHTML+=`<div class="gap-item ok" style="margin-bottom:8px;font-size:12px;line-height:1.6;">${s}</div>`;});
+  // Bullet rewrites
+  const bul=document.getElementById('resume-bullets');
+  const company=COMPANY_DB[resumeCompanyKey]?.name||'the target company';
+  const topMissing=missing.slice(0,3).join(', ').toUpperCase()||'relevant technologies';
+  bul.innerHTML=[
+    `<div class="improve-bullet">❌ Before: "Developed a web application using Java"<br>✅ After: "Built a <strong>Java Spring Boot</strong> REST API serving 5,000+ requests/day with <strong>MySQL</strong> indexing that reduced query time by 62% — aligned with ${company}'s tech stack"</div>`,
+    `<div class="improve-bullet">❌ Before: "Worked on a team project"<br>✅ After: "Collaborated in an Agile 4-person team to deliver a <strong>React + Node.js</strong> e-commerce portal, completing 3 sprints on schedule with 95% test coverage"</div>`,
+    `<div class="improve-bullet">❌ Before: "Used Redis in project"<br>✅ After: "Implemented <strong>Redis Write-Through caching</strong> with 60s TTL, reducing checkout latency from 4.2s → 900ms (78% improvement) under 200 concurrent users"</div>`,
+    missing.length>0?`<div class="improve-bullet">💡 Add to Skills section: <strong>${topMissing}</strong> — these keywords appear in the JD but are missing from your resume. ATS systems filter resumes that lack them.</div>`:'',
+  ].join('');
+  document.getElementById('resume-analysis-result').style.display='block';
+  document.getElementById('resume-analysis-result').scrollIntoView({behavior:'smooth'});
+  showToast('Resume analysis complete! '+matchPct+'% match with JD.','success');
+}
+
+// ── CHATBOT ───────────────────────────────────────────────────
+let chatOpen=false,chatVoiceActive=false,chatRecognition=null;
+const CHAT_KB={
+  'salary negotiation':['💰 Salary Negotiation Tips:\n\n1. **Research first** — Check Glassdoor, AmbitionBox for the role/company/city range\n2. **Never give a number first** — Say "I\'d prefer to discuss based on the overall package"\n3. **Anchor high** — Ask for 20-30% above your target\n4. **Justify with value** — "Based on my skills in [X] and [Y project], I believe ₹X is fair"\n5. **Negotiate the full package** — joining bonus, WFH policy, growth path, not just base CTC\n\nTemplate: *"I\'m very excited about this role. Based on my research and the market rate for this skill set, I was expecting ₹[X] LPA. Is there flexibility there?"*'],
+  'interview tips':['🎯 Top Interview Tips:\n\n1. **STAR format** for behavioral questions (Situation → Task → Action → Result)\n2. Always **quantify results** — "reduced by 40%" beats "made it faster"\n3. Prepare **3 strong projects** you can speak about for 3+ minutes each\n4. Research the company: product, recent news, competitors\n5. End every answer with **what you learned** — shows growth mindset\n6. Bring a list of **smart questions** to ask the interviewer'],
+  'resume tips':['📄 Resume Improvement Tips:\n\n1. **One page** for freshers/campus roles\n2. **Quantify everything** — users, latency, % improvement, team size\n3. Put your **tech stack clearly** — recruiters skim for keywords\n4. **GitHub link** is mandatory for software roles\n5. Each bullet: "Did X using Y which resulted in Z"\n6. Tailor skills section to match the JD keywords exactly\n7. Use the **Resume Optimizer** tab to check your match score!'],
+  'tell me about yourself':['🗣️ Tell Me About Yourself — Formula:\n\n**Past:** "I\'m a Final Year B.Tech CSE student from [College]. I have strong fundamentals in Java, SQL, and REST APIs."\n\n**Present:** "Recently, I built [Project] using [Stack], which [impact/metric]. I also completed [internship/cert]."\n\n**Future:** "I\'m looking to start my career at a company like [Name] where I can contribute to [specific team/product] and grow as a [role]."\n\nKeep it under 90 seconds. Practice until it feels natural, not rehearsed.'],
+  'star method':['⭐ STAR Method:\n\n**S - Situation:** Set the context\n"During my final year project, our team faced..."\n\n**T - Task:** Your responsibility\n"I was responsible for..."\n\n**A - Action:** What YOU specifically did\n"I implemented... I researched... I coordinated..."\n\n**R - Result:** Quantified outcome\n"This reduced latency by 78%, from 4.2s to 900ms"\n\n🔑 Key: The Result MUST have a number!'],
+  'tcs':['🏢 TCS Digital Tips:\n\n• Rounds: NQT → Technical → HR\n• Focus: Java/Python, DSA, SQL, STAR behavioral\n• NQT: Verbal, Aptitude, Coding (2 problems)\n• Technical: OOP concepts, project deep-dive, system design basics\n• HR: Why TCS? Team situations, 5-year plan\n• Tip: Know your resume projects inside out — they will probe every line'],
+  'cognizant':['🏢 Cognizant GenC/Elevate Tips:\n\n• Rounds: Aptitude → Technical → HR\n• Focus: Java/C++, DBMS, Networking basics\n• Technical: OOPS, SQL queries, basic DSA\n• HR: Communication skills are heavily weighted\n• Salary: GenC ~₹3.5L, Elevate ~₹4-6L LPA'],
+  'how are you':['I\'m running at 100%! Ready to help you ace your interview. What would you like to practice? 🚀'],
+  'default':['I can help you with:\n\n🎯 **Interview prep** — STAR method, common questions\n💰 **Salary negotiation** — scripts and strategies\n📄 **Resume tips** — what recruiters look for\n🏢 **Company-specific** — TCS, Cognizant, Infosys, Wipro tips\n⭐ **STAR method** — how to answer behavioral questions\n\nJust type your question or use the quick buttons below!'],
+};
+function toggleChatbot(){
+  chatOpen=!chatOpen;
+  document.getElementById('chat-panel').classList.toggle('open',chatOpen);
+  document.getElementById('chat-fab').textContent=chatOpen?'✕':'🤖';
+  if(chatOpen) document.getElementById('chat-input').focus();
+}
+function addChatMsg(text,role){
+  const body=document.getElementById('chat-body');
+  const d=document.createElement('div');
+  d.className='chat-msg '+role;
+  d.innerHTML=text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  body.appendChild(d);
+  body.scrollTop=body.scrollHeight;
+}
+function getChatResponse(input){
+  const low=input.toLowerCase();
+  for(const[key,responses] of Object.entries(CHAT_KB)){
+    if(low.includes(key)) return responses[Math.floor(Math.random()*responses.length)];
+  }
+  if(low.includes('java')||low.includes('python')||low.includes('sql')) return CHAT_KB['interview tips'][0];
+  if(low.includes('infosys')) return '🏢 Infosys SP Tips:\n\nRounds: Online Test → Technical → HR\nFocus: Logical reasoning, OOP, SQL, communication\nSP package: ~₹6.5 LPA — need strong aptitude + coding\nTip: Practice HackerEarth problems';
+  if(low.includes('wipro')) return '🏢 Wipro Elite/Turbo Tips:\n\nRounds: Online Test → Technical (2) → HR\nFocus: DSA, DBMS, System Design basics\nElite: ₹6.5L, Turbo: ₹10L — focus on DSA for higher band\nTip: LeetCode Easy/Medium problems';
+  if(low.includes('accenture')) return '🏢 Accenture ASE Tips:\n\nRounds: Communication Test → Coding → Technical → HR\nFocus: Communication skills, logical reasoning, basic coding\nASE: ~₹4.5L LPA\nTip: Communication round is elimination — speak clearly and confidently';
+  return CHAT_KB['default'][0];
+}
+function sendChatMessage(){
+  const inp=document.getElementById('chat-input');
+  const msg=inp.value.trim();
+  if(!msg) return;
+  addChatMsg(msg,'user');
+  inp.value='';
+  setTimeout(()=>addChatMsg(getChatResponse(msg),'bot'),400);
+}
+function chatQuickReply(text){
+  addChatMsg(text,'user');
+  setTimeout(()=>addChatMsg(getChatResponse(text),'bot'),400);
+}
+function toggleChatVoice(){
+  if(chatVoiceActive){stopChatVoice();}else{startChatVoice();}
+}
+function startChatVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast('Voice not supported in this browser. Use Chrome.','error');return;}
+  chatRecognition=new SR();chatRecognition.lang='en-IN';chatRecognition.interimResults=false;
+  chatRecognition.onresult=e=>{
+    const text=e.results[0][0].transcript;
+    document.getElementById('chat-input').value=text;
+    sendChatMessage();
+    stopChatVoice();
+  };
+  chatRecognition.onerror=()=>stopChatVoice();
+  chatRecognition.onend=()=>stopChatVoice();
+  try{chatRecognition.start();chatVoiceActive=true;document.getElementById('chat-voice-btn').classList.add('active');showToast('Listening... speak now','info',3000);}
+  catch(e){showToast('Mic error: '+e.message,'error');}
+}
+function stopChatVoice(){
+  if(chatRecognition){try{chatRecognition.stop();}catch(e){}}
+  chatVoiceActive=false;document.getElementById('chat-voice-btn').classList.remove('active');
+}
+
+// ── API KEY ERROR FIX ─────────────────────────────────────────
+// Patch analyzeJDWithGemini to use toast instead of persistent error
+const _origAnalyze=analyzeJDWithGemini;
+analyzeJDWithGemini=async function(){
+  const keyEl=document.getElementById('gemini-api-key');
+  const keyDefault=document.getElementById('gemini-api-key-default');
+  const key=(keyEl?keyEl.value.trim():'') || (keyDefault?keyDefault.value.trim():'');
+  if(!key.startsWith('AIza')){
+    showToast('❌ Invalid API key. Use "Launch Interview Now" instead — no key needed!','error',5000);
+    // Also hide the inline status
+    const st=document.getElementById('gemini-status');
+    if(st){st.style.display='none';}
+    return;
+  }
+  return _origAnalyze.apply(this,arguments);
+};
+
+</body>
+</html>
